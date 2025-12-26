@@ -12,7 +12,7 @@ import py7zr
 def main():
     """Extract all compressed files from raw folder to CSV files in raw_csv."""
     raw_dir = Path("data/raw")
-    raw_csv_dir = Path("data/raw_csv")
+    raw_csv_dir = Path("data/extracted_csv")
 
     raw_csv_dir.mkdir(parents=True, exist_ok=True)
 
