@@ -29,6 +29,7 @@ def main():
 
 def extract_file(compressed_file, output_dir, archive_type):
     """Extract a compressed file (7z or zip) to the output directory."""
+    # Extract to a temporary directory first
     temp_dir = output_dir / f"temp_{compressed_file.stem}"
     temp_dir.mkdir(exist_ok=True)
 
@@ -44,6 +45,7 @@ def extract_file(compressed_file, output_dir, archive_type):
     # Fix permissions on extracted files and directories
     fix_extracted_permissions(temp_dir)
 
+    # Rename and move CSV files to output directory
     print("Renaming CSV files...")
     csv_files = list(temp_dir.rglob("*.csv"))
     for csv_file in csv_files:

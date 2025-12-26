@@ -54,33 +54,26 @@ def download_fingrid_data(urls, output_dir="data/raw"):
                 break
 
         if not downloaded:
-            # Extract date from first URL for error message
-            first_url = url_group[0] if url_group else "unknown"
-            print(f"\n✗ Failed to download data for month in: {first_url}\n")
+            print(f"\n✗ Failed to download data for month in: {url_group[0]}\n")
 
 
 def download_single_url(url, root_path):
     """Download a single URL and return True if successful."""
-    expected_status_codes = 200
+    expected_status_code = 200
     print(f"Trying {url}...")
     response = requests.get(url, stream=True, timeout=10)
 
-    if response.status_code != expected_status_codes:
+    if response.status_code != expected_status_code:
         print(f"  → {response.status_code} {url}")
         return False
 
     filename = root_path / Path(url).name
-    save_response_to_file(response, filename)
-    print(f"✓ Downloaded {filename.name}")
-
-    return True
-
-
-def save_response_to_file(response, filename):
-    """Save response content to file."""
     with Path(filename).open("wb") as f:
         for chunk in response.iter_content(chunk_size=8192):  # noqa: FURB122
             f.write(chunk)
+    print(f"✓ Downloaded {filename.name}")
+
+    return True
 
 
 if __name__ == "__main__":
