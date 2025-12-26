@@ -4,8 +4,6 @@ from pathlib import Path
 
 import requests
 
-# Configuration - Edit these dates as needed
-
 
 def main():
     """Download data for the specified date range."""
