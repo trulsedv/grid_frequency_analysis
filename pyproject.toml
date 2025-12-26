@@ -7,11 +7,7 @@ authors = [
     { name = "Truls", email = "github.elude602@passmail.net" }
 ]
 requires-python = ">=3.13"
-dependencies = []
-
-[project.scripts]
-grid-frequency-analysis = "grid_frequency_analysis:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+dependencies = [
+    "pandas>=2.3.3",
+    "requests>=2.32.5",
+]

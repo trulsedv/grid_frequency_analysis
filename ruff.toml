@@ -1,0 +1,17 @@
+preview = true
+line-length = 120
+
+[lint]
+select = [
+   "ALL"
+]
+ignore = [
+   "ANN",  # allow missing type annotations
+   "CPY",  # recommend copyright notice
+   "DOC",  # pydoclint, "D" pydocstyle still lints docstrings, allows minimal docstrings if convention = "pep257"
+   "RET504",  # recommend not assigning right before returning
+   "T20",  # recommend removal of print statements
+]
+
+[lint.pydocstyle]
+convention = "pep257"
