@@ -7,7 +7,7 @@ import requests
 
 def main():
     """Download data for the specified date range."""
-    from_date = "2025-09"  # Start date in YYYY-MM format
+    from_date = "2021-10"  # Start date in YYYY-MM format
     to_date = "2025-10"    # End date in YYYY-MM format
     urls = generate_fingrid_urls(from_date, to_date)
     download_fingrid_data(urls)
@@ -15,7 +15,13 @@ def main():
 
 def generate_fingrid_urls(from_date, to_date):
     """Generate Fingrid data URLs for a range of dates in YYYY-MM format."""
-    base_url = "https://data.fingrid.fi/files/339/{year}/{year}-{month:02d}.7z"
+    # Multiple URL patterns to try (different formats used over time)
+    url_patterns = [
+        "https://data.fingrid.fi/files/339/{year}/{year}-{month:02d}.7z",  # With year folder, 7z
+        "https://data.fingrid.fi/files/339/{year}-{month:02d}.7z",         # Without year folder, 7z
+        "https://data.fingrid.fi/files/339/{year}-{month:02d}.zip",        # Without year folder, zip
+    ]
+
     urls = []
 
     from_year, from_month = map(int, from_date.split("-"))
@@ -23,7 +29,9 @@ def generate_fingrid_urls(from_date, to_date):
 
     year, month = from_year, from_month
     while (year < to_year) or (year == to_year and month <= to_month):
-        urls.append(base_url.format(year=year, month=month))
+        # Add all possible URL patterns for this month
+        month_urls = [pattern.format(year=year, month=month) for pattern in url_patterns]
+        urls.append(month_urls)
 
         month += 1
         if month > 12:  # noqa: PLR2004
@@ -34,21 +42,45 @@ def generate_fingrid_urls(from_date, to_date):
 
 
 def download_fingrid_data(urls, output_dir="data/raw"):
-    """Download 7z files from a list of URLs."""
+    """Download files from a list of URL groups (trying multiple URLs per month)."""
     output_dir = "data/raw"
     root_path = Path(output_dir)
     root_path.mkdir(exist_ok=True, parents=True)
 
-    for url in urls:
-        try:
-            print(f"Downloading {url}...")
-            filename = root_path / Path(url).name
-            with requests.get(url, stream=True, timeout=10) as r, Path(filename).open("wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):  # noqa: FURB122
-                    f.write(chunk)
-            print(f"Saved to {filename}")
-        except (requests.RequestException, OSError) as e:
-            print(f"Failed to download {url}: {e}")
+    for url_group in urls:
+        for url in url_group:
+            downloaded = download_single_url(url, root_path)
+            if downloaded:
+                break
+
+        if not downloaded:
+            # Extract date from first URL for error message
+            first_url = url_group[0] if url_group else "unknown"
+            print(f"\n✗ Failed to download data for month in: {first_url}\n")
+
+
+def download_single_url(url, root_path):
+    """Download a single URL and return True if successful."""
+    expected_status_codes = 200
+    print(f"Trying {url}...")
+    response = requests.get(url, stream=True, timeout=10)
+
+    if response.status_code != expected_status_codes:
+        print(f"  → {response.status_code} {url}")
+        return False
+
+    filename = root_path / Path(url).name
+    save_response_to_file(response, filename)
+    print(f"✓ Downloaded {filename.name}")
+
+    return True
+
+
+def save_response_to_file(response, filename):
+    """Save response content to file."""
+    with Path(filename).open("wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):  # noqa: FURB122
+            f.write(chunk)
 
 
 if __name__ == "__main__":
