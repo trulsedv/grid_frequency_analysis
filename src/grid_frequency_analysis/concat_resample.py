@@ -15,10 +15,18 @@ def main():
 
     csv_files = list(raw_csv_dir.glob("*.csv"))
     weekly_groups = group_files_by_week(csv_files)
+    weekly_groups = dict(sorted(weekly_groups.items()))
     for week_key, files in weekly_groups.items():
-        process_weekly_files(files, week_key, weekly_dir)
+        if should_process_week(week_key, weekly_dir):
+            process_weekly_files(files, week_key, weekly_dir)
 
     print("✓ Weekly processing complete!")
+
+
+def should_process_week(week_key, weekly_dir):
+    """Check if week should be processed by looking for existing output file."""
+    output_file = weekly_dir / f"{week_key}.csv"
+    return not output_file.exists()
 
 
 def group_files_by_week(csv_files):
@@ -46,14 +54,20 @@ def process_weekly_files(files, week_key, output_dir):
     weekly_data = []
 
     for csv_file in sorted(files):
-        df = pd.read_csv(csv_file, parse_dates=True)
+        try:
+            df = pd.read_csv(csv_file)
+        except pd.errors.EmptyDataError:
+            print(f"✗ Skipping empty file: {csv_file.name}")
+            continue
         weekly_data.append(df)
 
     week_df = pd.concat(weekly_data)
     week_df["Time"] = pd.to_datetime(week_df["Time"])
     week_df = week_df.set_index("Time")
     week_df = week_df.sort_index()
-    week_df = week_df.resample("1s").mean()
+
+    # Resample to 1Hz using mean aggregation, but avoid upsampling when missing data
+    week_df = week_df.groupby(week_df.index.floor("1s")).mean()
 
     output_file = output_dir / f"{week_key}.csv"
     week_df.to_csv(output_file)
