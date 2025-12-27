@@ -8,8 +8,8 @@ import requests
 
 def main():
     """Download data for the specified date range."""
-    from_date = "2017-09"  # Start date in YYYY-MM format
-    to_date = "2018-12"    # End date in YYYY-MM format
+    from_date = "2015-01"  # Start date in YYYY-MM format
+    to_date = "2025-10"    # End date in YYYY-MM format
     urls = generate_fingrid_urls(from_date, to_date)
     download_fingrid_data(urls)
 
