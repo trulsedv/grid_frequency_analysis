@@ -19,12 +19,31 @@ def main():
     # Extract 7z files
     seven_z_files = list(raw_dir.glob("*.7z"))
     for seven_z_file in seven_z_files:
-        extract_file(seven_z_file, raw_csv_dir, archive_type="7z")
+        if should_extract_archive(seven_z_file, raw_csv_dir):
+            extract_file(seven_z_file, raw_csv_dir, archive_type="7z")
 
     # Extract zip files
     zip_files = list(raw_dir.glob("*.zip"))
     for zip_file in zip_files:
-        extract_file(zip_file, raw_csv_dir, archive_type="zip")
+        if should_extract_archive(zip_file, raw_csv_dir):
+            extract_file(zip_file, raw_csv_dir, archive_type="zip")
+
+
+def should_extract_archive(compressed_file, csv_dir):
+    """Check if we should extract by looking for any CSV files from that month."""
+    # Extract year-month from filename (e.g., "2024-12" from "data_2024-12.7z")
+    year_month_pattern = r"(\d{4}-\d{2})"
+    match = re.search(year_month_pattern, compressed_file.name)
+
+    if not match:
+        return True  # Extract if we can't determine the month
+
+    year_month = match.group(1)
+
+    # Check if any CSV files from this month exist
+    existing_csvs = list(csv_dir.glob(f"{year_month}-*.csv"))
+
+    return len(existing_csvs) == 0
 
 
 def extract_file(compressed_file, output_dir, archive_type):
