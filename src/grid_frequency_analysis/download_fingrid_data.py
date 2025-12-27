@@ -1,5 +1,6 @@
 """Download Fingrid frequency data for a specified date range."""
 
+import re
 from pathlib import Path
 
 import requests
@@ -7,8 +8,8 @@ import requests
 
 def main():
     """Download data for the specified date range."""
-    from_date = "2021-10"  # Start date in YYYY-MM format
-    to_date = "2025-10"    # End date in YYYY-MM format
+    from_date = "2017-09"  # Start date in YYYY-MM format
+    to_date = "2018-12"    # End date in YYYY-MM format
     urls = generate_fingrid_urls(from_date, to_date)
     download_fingrid_data(urls)
 
@@ -20,6 +21,9 @@ def generate_fingrid_urls(from_date, to_date):
         "https://data.fingrid.fi/files/339/{year}/{year}-{month:02d}.7z",  # With year folder, 7z
         "https://data.fingrid.fi/files/339/{year}-{month:02d}.7z",         # Without year folder, 7z
         "https://data.fingrid.fi/files/339/{year}-{month:02d}.zip",        # Without year folder, zip
+        "https://data.fingrid.fi/files/339/xtaajuusraporttitaajuusdata2018csv-tiedostot-nettiin{year}-{month:02d}.zip",
+        "https://data.fingrid.fi/files/339/xtaajuusraporttitaajuusdata2017csv-tiedostot-nettiin{year}-{month:02d}.zip",
+        "https://data.fingrid.fi/files/339/pohjavarastoanalyysittaajuusraporttitaajuusdata2017-09.zip",
     ]
 
     urls = []
@@ -67,13 +71,23 @@ def download_single_url(url, root_path):
         print(f"  → {response.status_code} {url}")
         return False
 
-    filename = root_path / Path(url).name
+    filename = get_standardized_filename(url, root_path)
     with Path(filename).open("wb") as f:
         for chunk in response.iter_content(chunk_size=8192):  # noqa: FURB122
             f.write(chunk)
     print(f"✓ Downloaded {filename.name}")
 
     return True
+
+
+def get_standardized_filename(url, root_path):
+    """Extract year-month from URL and create standardized filename."""
+    year_month_pattern = r"(\d{4}-\d{2})"
+    match = re.search(year_month_pattern, url)
+
+    year_month = match.group(1)
+    extension = Path(url).suffix
+    return root_path / f"{year_month}{extension}"
 
 
 if __name__ == "__main__":
