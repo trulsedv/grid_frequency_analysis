@@ -16,17 +16,19 @@ def main():
 
     raw_csv_dir.mkdir(parents=True, exist_ok=True)
 
-    # Extract 7z files
-    seven_z_files = list(raw_dir.glob("*.7z"))
-    for seven_z_file in seven_z_files:
-        if should_extract_archive(seven_z_file, raw_csv_dir):
-            extract_file(seven_z_file, raw_csv_dir, archive_type="7z")
-
     # Extract zip files
     zip_files = list(raw_dir.glob("*.zip"))
+    zip_files = sorted(zip_files)
     for zip_file in zip_files:
         if should_extract_archive(zip_file, raw_csv_dir):
             extract_file(zip_file, raw_csv_dir, archive_type="zip")
+
+    # Extract 7z files
+    seven_z_files = list(raw_dir.glob("*.7z"))
+    seven_z_files = sorted(seven_z_files)
+    for seven_z_file in seven_z_files:
+        if should_extract_archive(seven_z_file, raw_csv_dir):
+            extract_file(seven_z_file, raw_csv_dir, archive_type="7z")
 
 
 def should_extract_archive(compressed_file, csv_dir):
