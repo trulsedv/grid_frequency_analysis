@@ -19,7 +19,9 @@ def main():
         df = pd.read_csv(csv_file)
 
         # Convert "Time" column from Helsinki time to Oslo time
-        df["Time"] = pd.to_datetime(df["Time"]).dt.tz_localize("Europe/Helsinki").dt.tz_convert("Europe/Oslo")
+        df["Time"] = pd.to_datetime(df["Time"])
+        df["Time"] = df["Time"].dt.tz_localize("Europe/Helsinki", ambiguous="infer")
+        df["Time"] = df["Time"].dt.tz_convert("Europe/Oslo")
 
         # Resample to 1-second intervals by averaging (no new timestamps)
         df = df.groupby(df["Time"].dt.floor("1s")).mean()
