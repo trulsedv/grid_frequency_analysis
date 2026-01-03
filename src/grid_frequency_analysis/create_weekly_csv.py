@@ -11,7 +11,8 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     weekly_data = {}
-    prev_week_key = None
+    prev_week = None
+    prev_year = None
 
     csv_files = sorted(input_dir.glob("*.csv"))
     for csv_file in csv_files:
@@ -19,35 +20,57 @@ def main():
 
         # Convert "Time" column from Helsinki time to Oslo time
         df["Time"] = pd.to_datetime(df["Time"]).dt.tz_localize("Europe/Helsinki").dt.tz_convert("Europe/Oslo")
-        df = df.set_index("Time")
 
-        # Resample to 1-second intervals by averaging, but do not add new timestamps
-        df = df.groupby(df.index.floor("1s")).mean()
+        # Resample to 1-second intervals by averaging (no new timestamps)
+        df = df.groupby(df["Time"].dt.floor("1s")).mean()
+        df = df.drop(columns=["Time"]).reset_index()
 
         df["ISO_Year"] = df["Time"].dt.isocalendar().year
         df["ISO_Week"] = df["Time"].dt.isocalendar().week
-        for (year, week), week_data in df.groupby(["ISO_Year", "ISO_Week"]):
-            week_key = f"{year}-W{week:02d}"
+        groups = df.groupby(["ISO_Year", "ISO_Week"])
+        for (year, week), week_data in groups:
+            if prev_week and prev_week != week:
+                write_week_csv(weekly_data, prev_year, prev_week, output_dir)
 
-            if prev_week_key and prev_week_key != week_key:
-                prev_week_data = pd.concat(weekly_data[prev_week_key], axis=0)
-                output_file = output_dir / f"{prev_week_key}.csv"
-                prev_week_data.drop(columns=["ISO_Year", "ISO_Week"]).to_csv(output_file, index=False)
-                print(f"Saved {output_file.name}", flush=True)
-                del weekly_data[prev_week_key]
+            if (year, week) not in weekly_data:
+                weekly_data[year, week] = []
+            weekly_data[year, week].append(week_data)
+            print(f"Added data for {year}-W{week:02d} from file {csv_file.name}")
+            prev_week = week
+            prev_year = year
 
-            if week_key not in weekly_data:
-                weekly_data[week_key] = []
-            weekly_data[week_key].append(week_data)
-            print(f"Added data for {week_key} from {csv_file.name}", flush=True)
-            prev_week_key = week_key
+    write_week_csv(weekly_data, prev_year, prev_week, output_dir)
 
-    if prev_week_key and prev_week_key in weekly_data:
-        last_week_data = pd.concat(weekly_data[prev_week_key], axis=0)
-        output_file = output_dir / f"{prev_week_key}.csv"
-        last_week_data.drop(columns=["ISO_Year", "ISO_Week"]).to_csv(output_file, index=False)
-        print(f"Saved {prev_week_key} to {output_file.name}")
-        del weekly_data[prev_week_key]
+
+def write_week_csv(weekly_data, prev_year, prev_week, output_dir):
+    """Write the previous week's data to a CSV file after filling missing seconds."""
+    prev_week_data = pd.concat(weekly_data[prev_year, prev_week], axis=0)
+    prev_week_data = prev_week_data.drop(columns=["ISO_Year", "ISO_Week"])
+    length_before = len(prev_week_data)
+
+    # Fill missing seconds
+    expected_week = get_expected_week(prev_year, prev_week)
+    prev_week_data = expected_week.merge(prev_week_data, on="Time", how="left")
+    prev_week_data = prev_week_data.ffill().bfill()
+    length_after = len(prev_week_data)
+
+    output_file = output_dir / f"{prev_year}-W{prev_week:02d}.csv"
+    prev_week_data.to_csv(output_file, index=True)
+    print(f"Saved {output_file.name} (filled in {length_after - length_before} rows)", flush=True)
+    del weekly_data[prev_year, prev_week]
+
+
+def get_expected_week(year, week):
+    """Generate a DataFrame with expected timestamps for the given ISO week in Oslo timezone."""
+    # sample rate
+    freq = "1s"
+    seconds = 1
+
+    expected_start = pd.Timestamp.fromisocalendar(year, week, 1).tz_localize("Europe/Oslo")
+    expected_end = expected_start + pd.Timedelta(weeks=1) - pd.Timedelta(seconds=seconds)
+    expected_range = pd.date_range(start=expected_start, end=expected_end, freq=freq)
+    df = pd.DataFrame({"Time": expected_range})
+    return df
 
 
 if __name__ == "__main__":
