@@ -16,16 +16,25 @@ def main():
 
     csv_files = sorted(input_dir.glob("*.csv"))
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file)
+        if skip_csv_file(csv_file, output_dir):
+            print(f"Skipping existing file for {csv_file.name} as weekly CSV exists.")
+            continue
+        try:
+            df = pd.read_csv(csv_file)
+        except pd.errors.EmptyDataError:
+            print(f"Skipping file with no columns: {csv_file.name}")
+            continue
+
+        df["Time"] = pd.to_datetime(df["Time"])
 
         # Convert "Time" column from Helsinki time to Oslo time
-        df["Time"] = pd.to_datetime(df["Time"])
-        df["Time"] = df["Time"].dt.tz_localize("Europe/Helsinki", ambiguous="infer")
+        df["Time"] = df["Time"].dt.tz_localize("Europe/Helsinki", ambiguous=False)
         df["Time"] = df["Time"].dt.tz_convert("Europe/Oslo")
 
         # Resample to 1-second intervals by averaging (no new timestamps)
-        df = df.groupby(df["Time"].dt.floor("1s")).mean()
-        df = df.drop(columns=["Time"]).reset_index()
+        df["Time"] = df["Time"].dt.floor("1s", ambiguous=False)
+        df = df.groupby(df["Time"]).mean()
+        df = df.reset_index()
 
         df["ISO_Year"] = df["Time"].dt.isocalendar().year
         df["ISO_Week"] = df["Time"].dt.isocalendar().week
@@ -46,6 +55,9 @@ def main():
 
 def write_week_csv(weekly_data, prev_year, prev_week, output_dir):
     """Write the previous week's data to a CSV file after filling missing seconds."""
+    if skip_week(prev_year, prev_week, output_dir):
+        del weekly_data[prev_year, prev_week]
+        return
     prev_week_data = pd.concat(weekly_data[prev_year, prev_week], axis=0)
     prev_week_data = prev_week_data.drop(columns=["ISO_Year", "ISO_Week"])
     length_before = len(prev_week_data)
@@ -73,6 +85,21 @@ def get_expected_week(year, week):
     expected_range = pd.date_range(start=expected_start, end=expected_end, freq=freq)
     df = pd.DataFrame({"Time": expected_range})
     return df
+
+
+def skip_csv_file(csv_file, output_dir):
+    """Check if the weekly CSV file already exists."""
+    date_str = csv_file.stem
+    date_obj = pd.to_datetime(date_str)
+    iso_year, iso_week, _ = date_obj.isocalendar()
+    output_file = output_dir / f"{iso_year}-W{iso_week:02d}.csv"
+    return output_file.exists()
+
+
+def skip_week(year, week, output_dir):
+    """Check if the weekly CSV file already exists."""
+    output_file = output_dir / f"{year}-W{week:02d}.csv"
+    return output_file.exists()
 
 
 if __name__ == "__main__":
