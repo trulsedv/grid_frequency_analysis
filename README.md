@@ -1,29 +1,44 @@
 # Grid Frequency Analysis
 
-This repo contains scripts used for analysis of the grid frequency in the nordic grid.
+This repo analyzes Nordic grid frequency and investigates whether the 2025
+improvement (fewer minutes outside 49.9–50.1 Hz) can be explained by damping in
+specific oscillation period ranges.
+
+## Project status
+
+- ✅ Data download/extraction and weekly 1 Hz CSV generation
+- ✅ Weekly minutes outside nominal band + cumulative yearly plotting
+- 🚧 Spectral tracking, reconstruction, and counterfactual attribution (planned)
+
+See:
+- `docs/analysis_plan.md`
+- `docs/pr_roadmap.md`
 
 ## Usage
 
-**Install dependencies:**
-   ```bash
-   uv sync
-   ```
+Install dependencies:
 
-### Download historical grid frequency
+```bash
+uv sync
+```
 
-1. **Edit dates** in `src/grid_frequency_analysis/download_fingrid_data.py`:
-   ```python
-   from_date = "2024-01"  # Start date in YYYY-MM format
-   to_date = "2024-12"    # End date in YYYY-MM format
-   ```
+Run implemented pipeline:
 
-2. **Run the script:**
-   ```bash
-   python src/grid_frequency_analysis/download_fingrid_data.py
-   ```
+```bash
+python src/run.py
+```
 
-Data will be downloaded as .7z files to the `data/raw/` directory.
+### Download historical grid frequency only
 
-## Data Source
+1. Edit dates in `src/grid_frequency_analysis/download_fingrid_data.py`
+2. Run:
+
+```bash
+python src/grid_frequency_analysis/download_fingrid_data.py
+```
+
+Data is downloaded as `.7z` files to `data/raw/`.
+
+## Data source
 
 [Fingrid open data](https://data.fingrid.fi/en/datasets/339), Frequency - historical data
