@@ -13,4 +13,5 @@ dependencies = [
     "py7zr>=0.22.0",
     "plotly>=5.17.0",
     "kaleido>=1.0.0",
+    "jax>=0.6.2",
 ]

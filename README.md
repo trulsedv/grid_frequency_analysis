@@ -8,6 +8,7 @@ specific oscillation period ranges.
 
 - ✅ Data download/extraction and weekly 1 Hz CSV generation
 - ✅ Weekly minutes outside nominal band + cumulative yearly plotting
+- ✅ Weekly FFT export (`period_s`, `amplitude`) per week
 - 🚧 Spectral tracking, reconstruction, and counterfactual attribution (planned)
 
 See:
@@ -27,6 +28,17 @@ Run implemented pipeline:
 ```bash
 python src/run.py
 ```
+
+Generate weekly FFT CSVs (full spectrum for each week):
+
+```bash
+uv run python src/grid_frequency_analysis/weekly_fft.py --window-size-seconds 3600
+```
+
+Outputs are written to `data/weekly_fft/<YYYY-WW>.csv` with columns:
+- `frequency_hz`
+- `period_s`
+- `amplitude`
 
 ### Download historical grid frequency only
 
