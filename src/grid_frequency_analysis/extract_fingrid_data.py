@@ -7,6 +7,7 @@ import zipfile
 from pathlib import Path
 
 import py7zr
+from py7zr.exceptions import Bad7zFile
 
 
 def main():
@@ -55,12 +56,18 @@ def extract_file(compressed_file, output_dir, archive_type):
     temp_dir.mkdir(exist_ok=True)
 
     print(f"Extracting {compressed_file.name}...")
-    if archive_type == "7z":
-        with py7zr.SevenZipFile(compressed_file, mode="r") as archive:
-            archive.extractall(path=temp_dir)
-    if archive_type == "zip":
-        with zipfile.ZipFile(compressed_file, "r") as archive:
-            archive.extractall(path=temp_dir)
+    try:
+        if archive_type == "7z":
+            with py7zr.SevenZipFile(compressed_file, mode="r") as archive:
+                archive.extractall(path=temp_dir)
+        if archive_type == "zip":
+            with zipfile.ZipFile(compressed_file, "r") as archive:
+                archive.extractall(path=temp_dir)
+    except (zipfile.BadZipFile, Bad7zFile, OSError) as exc:
+        print(f"⚠️  Skipping unreadable archive {compressed_file.name}: {exc}")
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return
+
     print(f"✓ Extracted to {temp_dir}")
 
     # Fix permissions on extracted files and directories
