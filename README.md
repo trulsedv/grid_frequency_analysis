@@ -32,7 +32,7 @@ python src/run.py
 Generate weekly FFT CSVs (full spectrum for each week):
 
 ```bash
-uv run python src/grid_frequency_analysis/weekly_fft.py --window-size-seconds 3600
+uv run python src/grid_frequency_analysis/weekly_fft.py --window-size-seconds 14400
 ```
 
 Outputs are written to `data/weekly_fft/<YYYY-WW>.csv` with columns:

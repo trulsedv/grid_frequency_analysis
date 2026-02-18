@@ -22,8 +22,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--window-size-seconds",
         type=int,
-        default=3600,
-        help="FFT window size in seconds (samples at 1 Hz)",
+        default=14400,
+        help="FFT window size in seconds (samples at 1 Hz), minimum 4 hours",
     )
     parser.add_argument(
         "--overlap-fraction",
@@ -50,8 +50,8 @@ def main() -> None:
 
     if not (0 <= args.overlap_fraction < 1):
         raise ValueError("--overlap-fraction must be in [0, 1)")
-    if args.window_size_seconds < 8:
-        raise ValueError("--window-size-seconds must be >= 8")
+    if args.window_size_seconds < 14400:
+        raise ValueError("--window-size-seconds must be >= 14400 (4 hours)")
 
     weekly_files = sorted(input_dir.glob("*.csv"))
     if args.limit_weeks > 0:

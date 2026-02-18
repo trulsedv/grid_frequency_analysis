@@ -127,7 +127,8 @@ def make_plot(df: pd.DataFrame, bins: tuple[PeriodBin, ...], plot_dir: Path) -> 
     fig.update_layout(
         title="Weekly mean FFT amplitude by period bin",
         xaxis_title="ISO Week",
-        yaxis_title="Mean amplitude",
+        yaxis_title="Mean amplitude (log scale)",
+        yaxis_type="log",
         legend_title="Period bin",
     )
 
