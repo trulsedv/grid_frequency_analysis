@@ -22,12 +22,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input-dir", default="data/weekly_fft", help="Directory with weekly FFT CSV files")
     parser.add_argument(
         "--output-csv",
-        default="data/weekly_fft_bin_means.csv",
+        default="results/weekly_fft_bin_means.csv",
         help="Output CSV path (week rows, bin columns)",
     )
     parser.add_argument(
         "--plot-output-dir",
-        default="data/plots",
+        default="results/plots",
         help="Directory for plot outputs (HTML and PNG)",
     )
     parser.add_argument(

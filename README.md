@@ -47,9 +47,9 @@ uv run python src/grid_frequency_analysis/weekly_fft_bin_means.py
 ```
 
 Outputs:
-- `data/weekly_fft_bin_means.csv`
-- `data/plots/weekly_fft_bin_means.html`
-- `data/plots/weekly_fft_bin_means.png`
+- `results/weekly_fft_bin_means.csv`
+- `results/plots/weekly_fft_bin_means.html`
+- `results/plots/weekly_fft_bin_means.png`
 
 ### Download historical grid frequency only
 
