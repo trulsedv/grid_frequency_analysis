@@ -6,38 +6,41 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
-def main():
+def main() -> None:
     """Execute the plotting analysis."""
-    filepath = "data/minutes_outside_nominal_per_week.csv"
-    data_file = Path(filepath)
+    data_file = Path("data/minutes_outside_nominal_per_week.csv")
+    output_dir = Path("results/plots")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     df = pd.read_csv(data_file)
     years_data = calculate_cumulative_by_year(df)
-    create_plots(years_data)
+    create_plots(years_data, output_dir)
 
 
-def calculate_cumulative_by_year(df):
+def calculate_cumulative_by_year(df: pd.DataFrame) -> dict[int, pd.DataFrame]:
     """Calculate cumulative minutes for each year."""
-    years_data = {}
+    years_data: dict[int, pd.DataFrame] = {}
     for year in df["year"].unique():
         year_df = df[df["year"] == year].copy()
         year_df = year_df.sort_values("week")
         year_df["cumulative_minutes"] = year_df["minutes_outside_nominal"].cumsum()
-        years_data[year] = year_df
+        years_data[int(year)] = year_df
     return years_data
 
 
-def create_plots(years_data):
+def create_plots(years_data: dict[int, pd.DataFrame], output_dir: Path) -> None:
     """Create plots for cumulative minutes by year."""
     fig = go.Figure()
 
     for year, data in years_data.items():
-        fig.add_trace(go.Scatter(
-            x=data["week"],
-            y=data["cumulative_minutes"],
-            name=str(year),
-            mode="lines+markers",
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=data["week"],
+                y=data["cumulative_minutes"],
+                name=str(year),
+                mode="lines+markers",
+            )
+        )
 
     fig.update_layout(
         title="Cumulative Minutes Outside Nominal Frequency Range by Year",
@@ -46,7 +49,17 @@ def create_plots(years_data):
         xaxis={"range": [1, 53]},
     )
 
-    fig.show()
+    html_path = output_dir / "cumulative_minutes_by_year.html"
+    png_path = output_dir / "cumulative_minutes_by_year.png"
+
+    fig.write_html(html_path, include_plotlyjs="cdn")
+    print(f"Saved {html_path}")
+
+    try:
+        fig.write_image(png_path, width=1600, height=900, scale=2)
+        print(f"Saved {png_path}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"PNG export failed: {exc}")
 
 
 if __name__ == "__main__":
