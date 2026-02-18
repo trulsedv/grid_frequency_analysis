@@ -40,6 +40,17 @@ Outputs are written to `data/weekly_fft/<YYYY-WW>.csv` with columns:
 - `period_s`
 - `amplitude`
 
+Aggregate FFT amplitudes by period bin (week rows, bin columns) and plot:
+
+```bash
+uv run python src/grid_frequency_analysis/weekly_fft_bin_means.py
+```
+
+Outputs:
+- `data/weekly_fft_bin_means.csv`
+- `data/plots/weekly_fft_bin_means.html`
+- `data/plots/weekly_fft_bin_means.png`
+
 ### Download historical grid frequency only
 
 1. Edit dates in `src/grid_frequency_analysis/download_fingrid_data.py`
