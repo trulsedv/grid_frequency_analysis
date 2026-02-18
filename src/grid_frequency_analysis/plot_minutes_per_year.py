@@ -26,12 +26,10 @@ def main() -> None:
 
     png_path = output_dir / "cumulative_minutes_by_year.png"
     try:
-        fig.write_image(png_path, width=1400, height=800, scale=2)
+        fig.write_image(png_path, width=1600, height=900, scale=2)
         print(f"Saved {png_path}")
     except Exception as exc:  # noqa: BLE001
-        print("Could not export PNG via Plotly image export. "
-              "Install kaleido/chrome if missing.")
-        print(f"PNG export error: {exc}")
+        print(f"PNG export failed: {exc}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="data/plots",
+        default="results/plots",
         help="Directory for generated plot files",
     )
     return parser.parse_args()
@@ -57,7 +55,7 @@ def calculate_cumulative_by_year(df: pd.DataFrame) -> dict[int, pd.DataFrame]:
         year_df = df[df["year"] == year].copy()
         year_df = year_df.sort_values("week")
         year_df["cumulative_minutes"] = year_df["minutes_outside_nominal"].cumsum()
-        years_data[year] = year_df
+        years_data[int(year)] = year_df
     return years_data
 
 

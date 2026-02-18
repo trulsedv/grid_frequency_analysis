@@ -9,6 +9,8 @@ import pandas as pd
 
 MAX_FILLED_ROWS = 7_200  # 2 hours at 1 Hz
 MAX_LONGEST_SYNTHETIC_STREAK_SECONDS = 1_800  # 30 minutes
+MIN_VALID_FREQUENCY_HZ = 45.0
+MAX_VALID_FREQUENCY_HZ = 55.0
 
 
 @dataclass
@@ -18,6 +20,7 @@ class WeeklyQuality:
     year: int
     week: int
     observed_rows: int
+    invalid_rows_replaced: int
     filled_rows: int
     longest_synthetic_streak_seconds: int
     status: str
@@ -27,7 +30,7 @@ def main() -> None:
     """Read daily CSV files and create weekly CSV files in Oslo timezone."""
     input_dir = Path("data/extracted_csv")
     output_dir = Path("data/weekly_csv")
-    report_path = Path("data/weekly_quality_report.csv")
+    report_path = Path("results/weekly_quality_report.csv")
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -106,12 +109,23 @@ def write_week_csv(
             year=year,
             week=week,
             observed_rows=0,
+            invalid_rows_replaced=0,
             filled_rows=0,
             longest_synthetic_streak_seconds=0,
             status="already_exists",
         )
 
     week_df = pd.concat(weekly_data[key], axis=0).drop(columns=["ISO_Year", "ISO_Week"])
+
+    invalid_mask = (
+        (week_df["Value"] <= 0)
+        | (week_df["Value"] < MIN_VALID_FREQUENCY_HZ)
+        | (week_df["Value"] > MAX_VALID_FREQUENCY_HZ)
+    )
+    invalid_rows_replaced = int(invalid_mask.sum())
+    if invalid_rows_replaced > 0:
+        week_df.loc[invalid_mask, "Value"] = pd.NA
+
     observed_rows = len(week_df)
 
     expected_week = get_expected_week(year, week)
@@ -126,6 +140,7 @@ def write_week_csv(
         year=year,
         week=week,
         observed_rows=observed_rows,
+        invalid_rows_replaced=invalid_rows_replaced,
         filled_rows=filled_rows,
         longest_synthetic_streak_seconds=longest_streak,
         status="saved",
@@ -137,8 +152,8 @@ def write_week_csv(
     ):
         quality.status = "skipped_quality"
         print(
-            f"Skipped {year}-W{week:02d}: filled_rows={filled_rows}, "
-            f"longest_synthetic_streak_seconds={longest_streak}"
+            f"Skipped {year}-W{week:02d}: invalid_rows_replaced={invalid_rows_replaced}, "
+            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}"
         )
         del weekly_data[key]
         return quality
@@ -149,7 +164,8 @@ def write_week_csv(
     merged.to_csv(output_file, index=True)
     print(
         f"Saved {output_file.name}: observed_rows={observed_rows}, "
-        f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}"
+        f"invalid_rows_replaced={invalid_rows_replaced}, filled_rows={filled_rows}, "
+        f"longest_synthetic_streak_seconds={longest_streak}"
     )
     del weekly_data[key]
     return quality
@@ -166,6 +182,7 @@ def write_quality_report(rows: list[WeeklyQuality], report_path: Path) -> None:
                 "year": r.year,
                 "week": r.week,
                 "observed_rows": r.observed_rows,
+                "invalid_rows_replaced": r.invalid_rows_replaced,
                 "filled_rows": r.filled_rows,
                 "longest_synthetic_streak_seconds": r.longest_synthetic_streak_seconds,
                 "status": r.status,
