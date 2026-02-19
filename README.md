@@ -51,6 +51,17 @@ Outputs:
 - `results/plots/weekly_fft_bin_means.html`
 - `results/plots/weekly_fft_bin_means.png`
 
+Reconstruct a 4h signal from weekly FFT amplitudes, tile to week length, and compare:
+
+```bash
+uv run python src/grid_frequency_analysis/reconstruct_from_weekly_fft.py --week 2024-W15 --window-size-seconds 14400
+```
+
+Outputs:
+- `results/reconstruction/<week>_measured_vs_reconstructed.csv`
+- `results/reconstruction/<week>_measured_vs_reconstructed.html`
+- `results/reconstruction/<week>_measured_vs_reconstructed.png`
+
 ### Download historical grid frequency only
 
 1. Edit dates in `src/grid_frequency_analysis/download_fingrid_data.py`
