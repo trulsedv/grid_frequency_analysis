@@ -16,7 +16,6 @@ The plot shows:
 
 ## Prerequisites
 
-- Raw/extracted weekly data exists in `data/weekly_csv/*.csv`
 - Python deps installed:
 
 ```bash
@@ -25,7 +24,41 @@ uv sync
 
 ---
 
-## 1) Weekly quality-filtered time series
+## 0) Download raw archives
+
+**Script:** `src/grid_frequency_analysis/download_fingrid_data.py`
+
+**Input:**
+- configured date range inside script (or CLI if configured in your branch)
+
+**Output:**
+- raw archives in `data/raw/`
+
+**Run:**
+```bash
+uv run python src/grid_frequency_analysis/download_fingrid_data.py
+```
+
+---
+
+## 1) Extract raw archives to daily CSV
+
+**Script:** `src/grid_frequency_analysis/extract_fingrid_data.py`
+
+**Input:**
+- `data/raw/*`
+
+**Output:**
+- `data/extracted_csv/YYYY-MM-DD.csv`
+
+**Run:**
+```bash
+uv run python src/grid_frequency_analysis/extract_fingrid_data.py
+```
+
+---
+
+## 2) Weekly quality-filtered time series
 
 **Script:** `src/grid_frequency_analysis/create_weekly_csv.py`
 
@@ -43,7 +76,7 @@ uv run python src/grid_frequency_analysis/create_weekly_csv.py
 
 ---
 
-## 2) Measured minutes outside nominal (all years)
+## 3) Measured minutes outside nominal (all years)
 
 **Script:** `src/grid_frequency_analysis/count_min_outside_nominal.py`
 
@@ -60,7 +93,7 @@ uv run python src/grid_frequency_analysis/count_min_outside_nominal.py
 
 ---
 
-## 3) Weekly STFT (complex coefficients)
+## 4) Weekly STFT (complex coefficients)
 
 **Script:** `src/grid_frequency_analysis/weekly_stft.py`
 
@@ -78,7 +111,7 @@ uv run python src/grid_frequency_analysis/weekly_stft.py --window-size-seconds 1
 
 ---
 
-## 4) Average STFT amplitude per week
+## 5) Average STFT amplitude per week
 
 **Script:** `src/grid_frequency_analysis/weekly_stft_average_amplitude.py`
 
@@ -97,7 +130,7 @@ uv run python src/grid_frequency_analysis/weekly_stft_average_amplitude.py
 
 ---
 
-## 5) Baseline average spectrum (pre-summer-2024)
+## 6) Baseline average spectrum (pre-summer-2024)
 
 **Script:** `src/grid_frequency_analysis/baseline_average_spectrum.py`
 
@@ -116,7 +149,7 @@ uv run python src/grid_frequency_analysis/baseline_average_spectrum.py --cutoff-
 
 ---
 
-## 6) 2025 undamped-estimate runs (weekly minutes)
+## 7) 2025 undamped-estimate runs (weekly minutes)
 
 **Script:** `src/grid_frequency_analysis/counterfactual_2025_analysis.py`
 
@@ -143,7 +176,7 @@ uv run python src/grid_frequency_analysis/counterfactual_2025_analysis.py
 
 ---
 
-## 7) By-bin attribution (primary-only, balancing-only, both)
+## 8) By-bin attribution (primary-only, balancing-only, both)
 
 **Generated using inline analysis run** (same method as step 6, split by bin set).
 
@@ -156,7 +189,7 @@ This file is used to build the final decomposition areas.
 
 ---
 
-## 8) Final decomposition plot with historical context
+## 9) Final decomposition plot with historical context
 
 **Generated using inline plotting run** (reads measured-all-years + by-bin 2025 table).
 
