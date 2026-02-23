@@ -9,8 +9,9 @@ def main() -> None:
     """Execute the frequency analysis."""
     # Define paths
     base_dir = Path(__file__).parent.parent.parent
-    weekly_csv_dir = base_dir / "data" / "weekly_csv"
-    output_file = base_dir / "data" / "minutes_outside_nominal_per_week.csv"
+    weekly_csv_dir = base_dir / "data" / "D03_weekly_1hz_csv"
+    output_file = base_dir / "data" / "D13_minutes_outside_unmodified_weeks" / "minutes_outside_unmodified_weeks.csv"
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     print("Grid Frequency Analysis: Minutes Outside Nominal Range (49.9-50.1 Hz)")
     print("=" * 70)

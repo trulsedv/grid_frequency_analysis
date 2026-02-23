@@ -1,4 +1,4 @@
-"""D02: Extract monthly archives into daily 10 Hz CSV files."""
+"""S02: Extract monthly archives into daily 10 Hz CSV files."""
 
 from __future__ import annotations
 

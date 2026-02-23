@@ -1,4 +1,4 @@
-"""D01: Download monthly frequency archives from Fingrid."""
+"""S01: Download monthly frequency archives from Fingrid."""
 
 from __future__ import annotations
 

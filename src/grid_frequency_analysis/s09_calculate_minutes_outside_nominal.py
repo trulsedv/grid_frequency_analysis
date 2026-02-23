@@ -1,4 +1,6 @@
-"""D09: Calculate minutes outside nominal band for all variants."""
+"""S09: Calculate minutes outside nominal band for all variants."""
+
+from __future__ import annotations
 
 from grid_frequency_analysis.count_min_outside_nominal import main
 

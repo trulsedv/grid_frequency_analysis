@@ -1,4 +1,4 @@
-"""D03: Create weekly 1 Hz logs and quality report."""
+"""S03: Create weekly 1 Hz logs and quality report."""
 
 from __future__ import annotations
 
