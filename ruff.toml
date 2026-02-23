@@ -6,11 +6,10 @@ select = [
    "ALL"
 ]
 ignore = [
-   "ANN",  # allow missing type annotations
-   "CPY",  # recommend copyright notice
-   "DOC",  # pydoclint, "D" pydocstyle still lints docstrings, allows minimal docstrings if convention = "pep257"
-   "RET504",  # recommend not assigning right before returning
-   "T20",  # recommend removal of print statements
+   "CPY",     # ignore missing-copyright-notice
+   "DOC",     # ignore pydoclint, still lints docstrings according to pydocstyle
+   "RET504",  # ignore assigning right before returning
+   "T20",     # ignore print statements
 ]
 
 [lint.pydocstyle]
