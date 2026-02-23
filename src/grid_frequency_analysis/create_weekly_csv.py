@@ -28,9 +28,9 @@ class WeeklyQuality:
 
 def main() -> None:
     """Read daily CSV files and create weekly CSV files in Oslo timezone."""
-    input_dir = Path("data/extracted_csv")
-    output_dir = Path("data/weekly_csv")
-    report_path = Path("results/weekly_quality_report.csv")
+    input_dir = Path("data/D02_extracted_10hz_csv")
+    output_dir = Path("data/D03_weekly_1hz_csv")
+    report_path = Path("results/quality_report.csv")
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -88,7 +88,7 @@ def main() -> None:
     print(
         "create_weekly_csv summary: "
         f"files_total={files_total}, files_skipped={files_skipped}, files_empty={files_empty}, "
-        f"weeks_evaluated={len(report_rows)}"
+        f"weeks_evaluated={len(report_rows)}",
     )
 
 
@@ -153,7 +153,7 @@ def write_week_csv(
         quality.status = "skipped_quality"
         print(
             f"Skipped {year}-W{week:02d}: invalid_rows_replaced={invalid_rows_replaced}, "
-            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}"
+            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}",
         )
         del weekly_data[key]
         return quality
@@ -165,7 +165,7 @@ def write_week_csv(
     print(
         f"Saved {output_file.name}: observed_rows={observed_rows}, "
         f"invalid_rows_replaced={invalid_rows_replaced}, filled_rows={filled_rows}, "
-        f"longest_synthetic_streak_seconds={longest_streak}"
+        f"longest_synthetic_streak_seconds={longest_streak}",
     )
     del weekly_data[key]
     return quality
@@ -188,7 +188,7 @@ def write_quality_report(rows: list[WeeklyQuality], report_path: Path) -> None:
                 "status": r.status,
             }
             for r in rows
-        ]
+        ],
     )
     report_df = report_df.sort_values(["year", "week"])
     report_df.to_csv(report_path, index=False)
@@ -202,8 +202,7 @@ def longest_true_streak(mask: pd.Series) -> int:
     for flag in mask.to_numpy():
         if bool(flag):
             current += 1
-            if current > max_streak:
-                max_streak = current
+            max_streak = max(max_streak, current)
         else:
             current = 0
     return int(max_streak)
