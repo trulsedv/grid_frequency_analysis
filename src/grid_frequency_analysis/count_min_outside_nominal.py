@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def main():
+def main() -> None:
     """Execute the frequency analysis."""
     # Define paths
     base_dir = Path(__file__).parent.parent.parent
@@ -24,9 +24,9 @@ def main():
     print(f"\nAnalysis complete! Results saved to {output_file}")
 
 
-def process_weekly_files(weekly_csv_dir):
+def process_weekly_files(weekly_csv_dir: str) -> list[tuple[int, int, float]]:
     """Process weekly CSV files and count minutes outside 49.9-50.1 Hz range."""
-    results = []
+    results: list[tuple[int, int, float]] = []
 
     # Get all weekly CSV files and sort them
     csv_files = sorted(Path(weekly_csv_dir).glob("*.csv"))
@@ -60,7 +60,7 @@ def process_weekly_files(weekly_csv_dir):
     return results
 
 
-def save_results(results, output_file):
+def save_results(results: list[tuple[int, int, float]], output_file: str) -> None:
     """Save results to CSV file with summary statistics."""
     # Create DataFrame from results
     df = pd.DataFrame(results, columns=["year", "week", "minutes_outside_nominal"])

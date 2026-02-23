@@ -10,7 +10,7 @@ import py7zr
 from py7zr.exceptions import Bad7zFile
 
 
-def main():
+def main() -> None:
     """Extract all compressed files from raw folder to CSV files in raw_csv."""
     raw_dir = Path("data/raw")
     raw_csv_dir = Path("data/extracted_csv")
@@ -32,7 +32,7 @@ def main():
             extract_file(seven_z_file, raw_csv_dir, archive_type="7z")
 
 
-def should_extract_archive(compressed_file, csv_dir):
+def should_extract_archive(compressed_file: Path, csv_dir: Path) -> bool:
     """Check if we should extract by looking for any CSV files from that month."""
     # Extract year-month from filename (e.g., "2024-12" from "data_2024-12.7z")
     year_month_pattern = r"(\d{4}-\d{2})"
@@ -49,7 +49,7 @@ def should_extract_archive(compressed_file, csv_dir):
     return len(existing_csvs) == 0
 
 
-def extract_file(compressed_file, output_dir, archive_type):
+def extract_file(compressed_file: Path, output_dir: Path, archive_type: str) -> None:
     """Extract a compressed file (7z or zip) to the output directory."""
     # Extract to a temporary directory first
     temp_dir = output_dir / f"temp_{compressed_file.stem}"
@@ -85,7 +85,7 @@ def extract_file(compressed_file, output_dir, archive_type):
     print(f"✓ Renamed and moved {len(csv_files)} CSV files to {output_dir}\n")
 
 
-def get_standardized_csv_name(original_name):
+def get_standardized_csv_name(original_name: str) -> str:
     """Generate a standardized CSV filename by extracting yyyy-mm-dd from the original name."""
     date_pattern = r"(\d{4}-\d{2}-\d{2})"
 
@@ -97,7 +97,7 @@ def get_standardized_csv_name(original_name):
     return original_name
 
 
-def fix_extracted_permissions(directory):
+def fix_extracted_permissions(directory: Path) -> None:
     """Fix permissions on extracted files and directories to ensure they're readable/writable."""
     # Walk through all files and directories
     for root, dirs, files in os.walk(directory):
