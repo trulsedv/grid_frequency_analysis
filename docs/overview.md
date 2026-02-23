@@ -51,12 +51,21 @@
             - showing area between modifed 2025 (low periods) and modified 2025 (low and high periods) as red area
             - showing area between modified 2025 (low and high periods) and modified 2025 (all periods) as grey area
 
-There are 10 scripts (list above).
-There are 16 datasets {Dx}.
-There are 2 results {Rx}.
-
 There will be additional scripts that show the validity of some of the steps:
-- Plot comparrison the FFT-apmlitudes of two weeks to show certain period ranges has been dampend.
-- Plot comparing a unmodified FFT-apmlitudes, a modified FFT-apmlitudes, and the average FFT-apmlitudes pre cutoff.
-- Animation showing how sines can reprocude measured frequency.
-- Plot comparring measured frequency, frequency signal from FFT, and frequency signal from modified FFT.
+- Plot comparrison the FFT-apmlitudes of two weeks (W22 in 2025 and 2024) to show certain period ranges has been dampend. {R3}
+- Plot comparing a unmodified FFT-apmlitudes (2025W22 average over the windows), a modified FFT-apmlitudes (2025W22 average over the windows), and the average FFT-apmlitudes pre cutoff. {R4}
+- Animation showing how sines can reprocude measured frequency (first hour of 2025W22). {R5}
+- Plot comparring measured frequency, frequency signal from STFT, and frequency signal from modified STFT. {R6}
+
+There are 10 scripts (list above). All should be its own file. Common code should be in utils.py.
+There are 16 datasets {Dx}. All should have its own folder.
+There are 6 results {Rx}. The figures should be both html and png. Can be stored in the root of the results folder. In total that should be 5 figures (10 files) and the quality report (1 file), so no more than 11 files in the results folder.
+
+The readme should be a short "scientific report" (as short as possible), and a quick intro to use the scripts. It should be feasible for an engineer to understand and make him/her be able to understand the result and critize the method of the analyzis.
+The final plot show that the reduction in minutes outside norm is mostly because of dampening of high period oscilation (balancing periods), but also significanlty by dampening of low period oscilations (frequency controll periods). This indicate that improved balancing is probably the main cause of the reduction, but improved frequency control has contributed a significant part.
+
+The scripts, datasets, and results should have short and understandable names that refer to the readme.
+
+The datasets should not be pushed to github.
+
+This should the only file in the docs folder.
