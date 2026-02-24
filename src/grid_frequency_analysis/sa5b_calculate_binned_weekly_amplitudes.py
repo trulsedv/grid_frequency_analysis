@@ -1,4 +1,4 @@
-"""Sa3 (5b): Calculate average amplitude per week for each defined bin (Da1)."""
+"""Sa5b: Calculate average amplitude per week for each defined bin (Da1)."""
 
 from grid_frequency_analysis.weekly_fft_bin_means import main
 

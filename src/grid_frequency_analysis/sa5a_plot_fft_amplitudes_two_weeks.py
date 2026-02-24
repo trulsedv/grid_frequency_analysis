@@ -1,4 +1,4 @@
-"""Sa2 (5a): Plot FFT amplitudes of W22 in 2025 and 2024."""
+"""Sa5a: Plot FFT amplitudes for two selected weeks."""
 
 from grid_frequency_analysis.plot_weekly_average_spectrum_compare import main
 

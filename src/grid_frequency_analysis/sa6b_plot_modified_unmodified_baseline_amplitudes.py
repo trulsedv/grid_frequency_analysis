@@ -1,0 +1,13 @@
+"""Sa6b: Plot unmodified/modified/baseline weekly amplitudes (Ra4)."""
+
+from __future__ import annotations
+
+
+def main() -> None:
+    """Run Sa6b appendix step."""
+    msg = "Sa6b not implemented yet"
+    raise NotImplementedError(msg)
+
+
+if __name__ == "__main__":
+    main()
