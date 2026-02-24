@@ -1,11 +1,14 @@
 # Grid frequency analysis (2015–2025)
 
 ## Summary
-This project investigate why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
+This project investigates why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
 
-Conclusion from the final figure:
+**Claim type:** this is a counterfactual attribution analysis, not a causal identification study.
+
+Interpretation of the final figure:
 - Most of the reduction is explained by damping in **high-period (balancing)** oscillations.
 - A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
+- This means the method can attribute how much of the observed reduction is reproducible under spectral amplitude replacements, but it does not prove root-cause mechanisms on its own.
 
 ## Method (pipeline scripts S01–S10)
 1. **S01 – Download frequency archives**
@@ -41,7 +44,8 @@ Conclusion from the final figure:
    - Output: `data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv`.
 
 7. **S07 – Modify 2025 STFT amplitudes**
-   - Builds scale factors from baseline-vs-2025 amplitudes.
+   - Builds period-wise scale factors from `baseline_amplitude / observed_2025_amplitude`.
+   - Applies those factors to STFT amplitudes while preserving the observed phase in each frame.
    - Produces 3 modified 2025 STFT variants:
      - modify all periods (D07)
      - modify low+high periods (D08)
