@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from grid_frequency_analysis.period_bins import DEFAULT_PERIOD_BINS
+from grid_frequency_analysis.utils import DEFAULT_PERIOD_BINS
 
 
 def parse_args() -> argparse.Namespace:

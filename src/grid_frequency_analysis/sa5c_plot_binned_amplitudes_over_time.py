@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 
-from grid_frequency_analysis.period_bins import DEFAULT_PERIOD_BINS
+from grid_frequency_analysis.utils import DEFAULT_PERIOD_BINS
 
 
 def parse_args() -> argparse.Namespace:
