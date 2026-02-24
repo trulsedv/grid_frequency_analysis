@@ -1,9 +1,9 @@
-# Grid frequency analysis (Fingrid, 2015–2025)
+# Grid frequency analysis (2015–2025)
 
-## Summary (purpose + conclusion)
-This project tests why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
+## Summary
+This project investigate why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
 
-Conclusion from the final decomposition result:
+Conclusion from the final figure:
 - Most of the reduction is explained by damping in **high-period (balancing)** oscillations.
 - A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
 
@@ -88,7 +88,7 @@ Install dependencies:
 uv sync
 ```
 
-Run full pipeline:
+Run full pipeline (note the three first will takr time to finish):
 
 ```bash
 uv run python scripts/s01_download_frequency_archives.py
