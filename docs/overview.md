@@ -91,3 +91,4 @@ Appendecies
     - IN: weekly 1 Hz .csv {D3} & reproduced weekly 1 Hz .csv {Da3} & modified 2025 weekly 1 Hz .csv  (low and high periods) {D11}
     - OUT: figure showing the frequency signals {Ra5}
         - all lines should be a bit transparent since they will be on top of eachother a lot
+        - figure should only show 1 hour to make details clearer
