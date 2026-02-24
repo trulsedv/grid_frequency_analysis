@@ -82,8 +82,7 @@ def main() -> None:  # noqa: C901, PLR0914, PLR0915
             df = pd.read_csv(
                 csv_file,
                 usecols=["Time", "Value"],
-                parse_dates=["Time"],
-                dtype={"Value": "float64"},
+                dtype={"Time": "string", "Value": "float64"},
             )
         except pd.errors.EmptyDataError:
             files_empty += 1
@@ -93,10 +92,11 @@ def main() -> None:  # noqa: C901, PLR0914, PLR0915
             files_empty += 1
             continue
 
-        # Keep this path vectorized: it is the hot path for S03 runtime.
-        df["Time"] = df["Time"].dt.tz_localize("Europe/Helsinki", ambiguous=False)
-        df["Time"] = df["Time"].dt.tz_convert("Europe/Oslo")
-        df["Time"] = df["Time"].dt.floor("1s", ambiguous=False)
+        # Fast parse with explicit format (10 Hz source layout), then shift to Oslo.
+        # Helsinki and Oslo stay 1 hour apart through DST transitions.
+        df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce")
+        df = df.dropna(subset=["Time"])
+        df["Time"] = (df["Time"] - pd.Timedelta(hours=1)).dt.floor("1s")
         df = df.groupby("Time", as_index=False, sort=False)["Value"].mean()
 
         iso = df["Time"].dt.isocalendar()
@@ -245,8 +245,8 @@ def longest_true_streak(mask: np.ndarray) -> int:
 
 
 def get_expected_week_index(year: int, week: int) -> pd.DatetimeIndex:
-    """Generate expected 1 Hz timestamps for one ISO week in Oslo timezone."""
-    expected_start = pd.Timestamp.fromisocalendar(year, week, 1).tz_localize("Europe/Oslo")
+    """Generate expected 1 Hz timestamps for one ISO week in Oslo local clock."""
+    expected_start = pd.Timestamp.fromisocalendar(year, week, 1)
     expected_end = expected_start + pd.Timedelta(weeks=1) - pd.Timedelta(seconds=1)
     return pd.date_range(start=expected_start, end=expected_end, freq="1s")
 
