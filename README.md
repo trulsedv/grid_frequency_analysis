@@ -10,6 +10,50 @@ Method summary:
 4. Replace 2025 spectral amplitudes with baseline amplitudes in selected period ranges.
 5. Reconstruct modified 2025 signals and compare minutes outside band.
 
+## Method details (for technical review)
+### Data conditioning (S03)
+- Source is daily 10 Hz frequency CSV files.
+- Data is downsampled to 1 Hz by second-level averaging.
+- Invalid values are replaced (`<=0`, `<45 Hz`, `>55 Hz`), then filled with forward/backward fill.
+- Week quality gates:
+  - `filled_rows <= 7200` (max 2 hours synthetic fill)
+  - `longest_synthetic_streak_seconds <= 1800` (max 30 min consecutive synthetic)
+- Weeks failing gates are excluded from downstream analysis and logged in `results/quality_report.csv`.
+
+### Spectral model (S04–S06)
+- STFT is computed per week with Hann windowing and overlap (`window_size_seconds=14400`, overlap `0.5` by default).
+- Output STFT stores complex FFT values per frame and period bin.
+- Weekly amplitudes (S05) are `mean(abs(STFT), axis=frames)`.
+- Baseline (S06) is the period-wise mean amplitude across pre-cutoff weeks (`< 2024-W22` by default).
+
+### Counterfactual construction (S07–S08)
+- For each 2025 week, period-wise scale factors are derived from `baseline_amplitude / 2025_amplitude`.
+- Three modified STFT variants are created:
+  - all periods,
+  - low+high periods,
+  - low periods only.
+- Modified STFT is inverted via overlap-add iSTFT to 1 Hz weekly signals.
+
+### Outcome metric and attribution (S09–S10)
+- Outcome is weekly minutes outside [49.9, 50.1] Hz.
+- Cumulative yearly curves compare measured and counterfactual variants.
+- Area decomposition attributes parts of the 2025 reduction to different period-range interventions.
+
+### Period bins used
+- fast_sub_primary_5s_to_30s (5–30 s)
+- primary_local_control_30s_to_2m (30–120 s)
+- midrange_2m_to_15m (120–900 s)
+- balancing_15m_to_2h (900–7200 s)
+- slow_over_2h_to_12h (7200–43200 s)
+
+### Key assumptions and limitations
+- This is an attribution-style counterfactual, not causal identification.
+- Amplitude replacement keeps observed phase structure; phase dynamics are not independently modeled.
+- Fixed STFT window/overlap choices affect low-frequency resolution and attribution sensitivity.
+- Quality filtering can remove difficult weeks and may bias representativeness.
+- Fill strategy (ffill/bfill) is simple and may smooth extremes in missing intervals.
+- Results depend on chosen cutoff week and period-bin definitions.
+
 Main interpretation from the final decomposition plot:
 - Most reduction is explained by damping in **high-period (balancing)** oscillations.
 - A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
