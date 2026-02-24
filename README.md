@@ -3,12 +3,14 @@
 ## Summary
 This project investigates why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
 
-**Claim type:** this is a counterfactual attribution analysis, not a causal identification study.
+**What this can and cannot show:**
+This method tests "what would 2025 look like if parts of the spectrum looked more like the pre-cutoff years?".
 
 Interpretation of the final figure:
 - Most of the reduction is explained by damping in **high-period (balancing)** oscillations.
 - A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
-- This means the method can attribute how much of the observed reduction is reproducible under spectral amplitude replacements, but it does not prove root-cause mechanisms on its own.
+- So this can estimate how much of the 2025 improvement is consistent with changes in those oscillation ranges.
+- But it does **not** prove the real-world cause by itself.
 
 ## Method (pipeline scripts S01–S10)
 1. **S01 – Download frequency archives**
