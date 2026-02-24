@@ -40,7 +40,7 @@ def decode(  # noqa: PLR0913, PLR0917
     orig_len: int,
     pad: int,
 ) -> np.ndarray:
-    """Decode STFT back to 1 Hz signal."""
+    """Reconstruct one time-domain signal from STFT frames using overlap-add."""
     window = np.hanning(n)
     starts = starts_for_len(padded_len, n, hop)
     out = np.zeros(padded_len)
@@ -50,6 +50,7 @@ def decode(  # noqa: PLR0913, PLR0917
         out[start : start + n] += segment * window
         norm[start : start + n] += window * window
 
+    # Normalize overlap-add energy; epsilon avoids division spikes near edges.
     valid = norm > NORMALIZATION_EPSILON
     out[valid] /= norm[valid]
     out[~valid] = 0.0

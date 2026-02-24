@@ -25,7 +25,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:  # noqa: C901, PLR0914, PLR0915
-    """Run S07 pipeline step."""
+    """Create three modified STFT datasets for the target year.
+
+    The script scales STFT bins using baseline-vs-target amplitude ratios and
+    writes three variants: all-period scaling, low+high-period scaling, and
+    low-period-only scaling.
+    """
     args = parse_args()
 
     src_dir = Path(args.source_stft_dir)
@@ -62,6 +67,7 @@ def main() -> None:  # noqa: C901, PLR0914, PLR0915
         target_avg = pd.read_csv(week_avg_path)
         merged = target_avg.merge(baseline, on="period_s", suffixes=("_target", "_base"))
         merged["scale"] = merged["amplitude_base"] / merged["amplitude_target"]
+        # Round periods so CSV float representation differences do not break lookups.
         rounded_periods = np.round(merged["period_s"].to_numpy(), 9)
         scales = merged["scale"].to_numpy()
         period_to_scale = dict(zip(rounded_periods, scales, strict=False))
