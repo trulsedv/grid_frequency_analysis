@@ -153,7 +153,7 @@ def write_week_csv(
 
     if (not overwrite_existing_weeks) and skip_week(year, week, output_dir):
         del weekly_data[key]
-        return WeeklyQuality(year, week, 0, 0, 0, 0, "already_exists")
+        return None
 
     week_df = pd.concat(weekly_data[key], axis=0).drop(columns=["ISO_Year", "ISO_Week"])
 
@@ -208,11 +208,12 @@ def write_week_csv(
 
 
 def write_quality_report(rows: list[WeeklyQuality], report_path: Path) -> None:
-    """Write the per-week quality summary CSV."""
-    if not rows:
+    """Write/merge weekly quality summary without rewriting existing-week status."""
+    if not rows and report_path.exists():
+        print(f"Quality report unchanged: {report_path}")
         return
 
-    report_df = pd.DataFrame(
+    new_df = pd.DataFrame(
         [
             {
                 "year": r.year,
@@ -226,6 +227,17 @@ def write_quality_report(rows: list[WeeklyQuality], report_path: Path) -> None:
             for r in rows
         ],
     )
+
+    if report_path.exists():
+        existing_df = pd.read_csv(report_path)
+        if new_df.empty:
+            report_df = existing_df
+        else:
+            report_df = pd.concat([existing_df, new_df], axis=0)
+            report_df = report_df.drop_duplicates(subset=["year", "week"], keep="last")
+    else:
+        report_df = new_df
+
     report_df = report_df.sort_values(["year", "week"])
     report_df.to_csv(report_path, index=False)
     print(f"Saved quality report: {report_path}")
