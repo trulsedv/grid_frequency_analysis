@@ -14,12 +14,12 @@ Conclusion from the final figure:
 
 2. **S02 – Extract frequency archives**
    - Extracts daily 10 Hz CSV files from D01.
-   - Normalizes filenames to `YYYY-MM-DD.csv` when possible.
    - Output: `data/D02_extracted_10hz_csv`.
 
 3. **S03 – Create weekly 1 Hz logs + quality report**
    - Downsamples daily 10 Hz to 1 Hz (second-level average).
-   - Invalid values replaced (`<=0`, `<45 Hz`, `>55 Hz`), then filled (`ffill/bfill`).
+   - Invalid values removed (`<45 Hz`, `>55 Hz`)
+   - Fill in missing values (`ffill/bfill`).
    - Week-level quality gates:
      - `filled_rows <= 7200`
      - `longest_synthetic_streak_seconds <= 1800`
@@ -29,12 +29,11 @@ Conclusion from the final figure:
      - `results/quality_report.csv` (R1)
 
 4. **S04 – Calculate weekly STFT**
-   - Computes complex STFT for each week (Hann window, overlap).
+   - Splits each week into windows (Hann window, overlap) and calculate FFT for each.
    - Default: `window_size_seconds=14400`, `overlap_fraction=0.5`.
    - Output: `data/D04_weekly_stft`.
 
 5. **S05 – Calculate weekly average amplitudes**
-   - Converts STFT to weekly amplitude spectra via `mean(abs(STFT), axis=frames)`.
    - Output: `data/D05_weekly_stft_avg_amplitude`.
 
 6. **S06 – Calculate pre-cutoff baseline spectrum**
@@ -44,9 +43,9 @@ Conclusion from the final figure:
 7. **S07 – Modify 2025 STFT amplitudes**
    - Builds scale factors from baseline-vs-2025 amplitudes.
    - Produces 3 modified 2025 STFT variants:
-     - all periods (D07)
-     - low+high periods (D08)
-     - low periods (D09)
+     - modify all periods (D07)
+     - modify low+high periods (D08)
+     - modify low periods (D09)
 
 8. **S08 – Reconstruct modified 2025 weekly 1 Hz signals**
    - Inverse STFT with overlap-add reconstruction.
