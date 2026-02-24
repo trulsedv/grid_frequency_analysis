@@ -6,8 +6,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-
-from grid_frequency_analysis.utils import DEFAULT_PERIOD_BINS
+from utils import DEFAULT_PERIOD_BINS
 
 
 def parse_args() -> argparse.Namespace:
