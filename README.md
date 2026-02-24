@@ -1,7 +1,11 @@
 # Grid frequency analysis (Fingrid, 2015–2025)
 
-## Purpose
+## Summary (purpose + conclusion)
 This project tests why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
+
+Conclusion from the final decomposition result:
+- Most of the reduction is explained by damping in **high-period (balancing)** oscillations.
+- A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
 
 ## Method (pipeline scripts S01–S10)
 1. **S01 – Download frequency archives**
@@ -63,12 +67,6 @@ This project tests why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
     - Builds cumulative yearly curves and decomposition areas.
     - Output: `results/cumulative_minutes_outside_nominal.html/.png` (R2).
 
-## Appendix scripts
-- `sa4a` → Ra1
-- `sa5a`, `sa5b`, `sa5c` → Ra2, Da1, Ra3
-- `sa6a`, `sa6b` → Da2, Ra4
-- `sa8a`, `sa8b` → Da3, Ra5
-
 Period bins used in spectral attribution:
 - fast_sub_primary_5s_to_30s (5–30 s)
 - primary_local_control_30s_to_2m (30–120 s)
@@ -82,10 +80,6 @@ Period bins used in spectral attribution:
 - STFT window/overlap choices affect low-frequency attribution.
 - Quality filtering may remove difficult weeks and affect representativeness.
 - Results depend on cutoff week and period-bin definitions.
-
-Main interpretation from the final decomposition plot:
-- Most reduction is explained by damping in **high-period (balancing)** oscillations.
-- A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
 
 ## Run
 Install dependencies:
