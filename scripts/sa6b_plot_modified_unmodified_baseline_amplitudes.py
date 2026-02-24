@@ -6,8 +6,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-import plotly.graph_objects as go
-from utils import resolve_week_with_fallback
+from utils import plot_period_spectrum_series, resolve_week_with_fallback
 
 
 def parse_args() -> argparse.Namespace:
@@ -34,53 +33,20 @@ def main() -> None:
     modified = pd.read_csv(Path(args.modified_dir) / f"{week}.csv")
     baseline = pd.read_csv(args.baseline_csv)
 
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=unmodified["period_s"],
-            y=unmodified["amplitude"],
-            mode="lines",
-            name=f"{week} unmodified",
-        ),
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=modified["period_s"],
-            y=modified["amplitude_modified"],
-            mode="lines",
-            name=f"{week} modified",
-        ),
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=baseline["period_s"],
-            y=baseline["amplitude"],
-            mode="lines",
-            name="baseline pre-cutoff",
-        ),
-    )
-
-    fig.update_layout(
+    plot_period_spectrum_series(
+        [
+            (unmodified["period_s"].to_numpy(), unmodified["amplitude"].to_numpy(), f"{week} unmodified"),
+            (
+                modified["period_s"].to_numpy(),
+                modified["amplitude_modified"].to_numpy(),
+                f"{week} modified",
+            ),
+            (baseline["period_s"].to_numpy(), baseline["amplitude"].to_numpy(), "baseline pre-cutoff"),
+        ],
         title=f"Weekly amplitude comparison for {week}",
-        xaxis_title="Period (s)",
-        yaxis_title="Amplitude",
-        xaxis_type="log",
-        yaxis_type="log",
-        template="plotly_white",
+        output_html=args.output_html,
+        output_png=args.output_png,
     )
-
-    output_html = Path(args.output_html)
-    output_png = Path(args.output_png)
-    output_html.parent.mkdir(parents=True, exist_ok=True)
-
-    fig.write_html(output_html, include_plotlyjs="cdn")
-    try:
-        fig.write_image(output_png, width=1600, height=900, scale=2)
-    except Exception as exc:  # noqa: BLE001
-        print(f"PNG export failed: {exc}")
-
-    print(f"Saved {output_html}")
-    print(f"Saved {output_png}")
 
 
 if __name__ == "__main__":

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import suppress
 from pathlib import Path
 
 import pandas as pd
-import plotly.graph_objects as go
+from utils import plot_period_spectrum_series
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,27 +28,15 @@ def main() -> None:
     week_a = pd.read_csv(input_dir / f"{args.week_a}.csv")
     week_b = pd.read_csv(input_dir / f"{args.week_b}.csv")
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=week_a["period_s"], y=week_a["amplitude"], mode="lines", name=args.week_a))
-    fig.add_trace(go.Scatter(x=week_b["period_s"], y=week_b["amplitude"], mode="lines", name=args.week_b))
-    fig.update_layout(
+    plot_period_spectrum_series(
+        [
+            (week_a["period_s"].to_numpy(), week_a["amplitude"].to_numpy(), args.week_a),
+            (week_b["period_s"].to_numpy(), week_b["amplitude"].to_numpy(), args.week_b),
+        ],
         title=f"Average STFT amplitude: {args.week_a} vs {args.week_b}",
-        xaxis_title="Period (s)",
-        yaxis_title="Amplitude",
-        xaxis_type="log",
-        yaxis_type="log",
+        output_html=args.output_html,
+        output_png=args.output_png,
     )
-
-    html = Path(args.output_html)
-    png = Path(args.output_png)
-    html.parent.mkdir(parents=True, exist_ok=True)
-
-    fig.write_html(html, include_plotlyjs="cdn")
-    with suppress(ValueError, RuntimeError):
-        fig.write_image(png, width=1600, height=900, scale=2)
-
-    print(f"Saved {html}")
-    print(f"Saved {png}")
 
 
 if __name__ == "__main__":

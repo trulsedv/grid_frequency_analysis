@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import pathlib
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
+import plotly.graph_objects as go
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -89,3 +92,36 @@ def resolve_week_with_fallback(requested_week: str, *directories: Path) -> str:
     fallback = max(candidates)
     print(f"Requested week {requested_week} not available; using {fallback}")
     return fallback
+
+
+def plot_period_spectrum_series(
+    series: list[tuple[np.ndarray, np.ndarray, str]],
+    *,
+    title: str,
+    output_html: str,
+    output_png: str,
+) -> None:
+    """Plot one or more period-vs-amplitude line series and save HTML/PNG."""
+    fig = go.Figure()
+    for x_vals, y_vals, label in series:
+        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode="lines", name=label))
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="Period (s)",
+        yaxis_title="Amplitude",
+        xaxis_type="log",
+        yaxis_type="log",
+        template="plotly_white",
+    )
+
+    html = pathlib.Path(output_html)
+    png = pathlib.Path(output_png)
+    html.parent.mkdir(parents=True, exist_ok=True)
+
+    fig.write_html(html, include_plotlyjs="cdn")
+    with suppress(ValueError, RuntimeError):
+        fig.write_image(png, width=1600, height=900, scale=2)
+
+    print(f"Saved {html}")
+    print(f"Saved {png}")
