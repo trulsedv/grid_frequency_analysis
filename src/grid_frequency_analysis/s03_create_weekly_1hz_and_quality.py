@@ -155,7 +155,7 @@ def write_week_csv(
         del weekly_data[key]
         return WeeklyQuality(year, week, 0, 0, 0, 0, "already_exists")
 
-    week_df = pd.concat(weekly_data[key], axis=0, copy=False).drop(columns=["ISO_Year", "ISO_Week"])
+    week_df = pd.concat(weekly_data[key], axis=0).drop(columns=["ISO_Year", "ISO_Week"])
 
     invalid_mask = (
         (week_df["Value"] <= 0)
