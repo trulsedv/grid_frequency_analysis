@@ -1,78 +1,64 @@
-# Grid Frequency Analysis
+# Grid frequency analysis (Fingrid, 2015–2025)
 
-This repo analyzes Nordic grid frequency and investigates whether the 2025
-improvement (fewer minutes outside 49.9–50.1 Hz) can be explained by damping in
-specific oscillation period ranges.
+## Purpose
+This project tests why 2025 has fewer minutes outside the 49.9–50.1 Hz band.
 
-## Project status
+Method summary:
+1. Build weekly 1 Hz signals from daily 10 Hz data.
+2. Compute weekly STFT spectra.
+3. Build a pre-cutoff baseline spectrum.
+4. Replace 2025 spectral amplitudes with baseline amplitudes in selected period ranges.
+5. Reconstruct modified 2025 signals and compare minutes outside band.
 
-- ✅ Data download/extraction and weekly 1 Hz CSV generation
-- ✅ Weekly minutes outside nominal band + cumulative yearly plotting
-- ✅ Weekly FFT export (`period_s`, `amplitude`) per week
-- 🚧 Spectral tracking, reconstruction, and counterfactual attribution (planned)
+Main interpretation from the final decomposition plot:
+- Most reduction is explained by damping in **high-period (balancing)** oscillations.
+- A significant part is also explained by damping in **low-period (frequency-control)** oscillations.
 
-See:
-- `docs/analysis_plan.md`
-- `docs/pr_roadmap.md`
+## Project structure
+- `scripts/` contains all numbered pipeline scripts (`s01..s10`) and appendix scripts (`sa4a..sa8b`) plus `utils.py`.
+- `data/` uses numbered datasets (`D01..D16`, `Da1..Da3`).
+- `results/` contains report outputs (`R1`, `R2`, `Ra1..Ra5`).
+- `docs/overview.md` is the canonical workflow specification.
 
-## Usage
-
-Install dependencies:
+## Quick run
+Install deps:
 
 ```bash
 uv sync
 ```
 
-Run implemented pipeline:
+Run full pipeline:
 
 ```bash
-python src/run.py
+uv run python scripts/s01_download_frequency_archives.py
+uv run python scripts/s02_extract_frequency_archives.py
+uv run python scripts/s03_create_weekly_1hz_and_quality.py
+uv run python scripts/s04_calculate_weekly_stft.py
+uv run python scripts/s05_calculate_weekly_average_amplitudes.py
+uv run python scripts/s06_calculate_baseline_pre_cutoff.py
+uv run python scripts/s07_modify_2025_stft.py
+uv run python scripts/s08_reconstruct_modified_2025_signal.py
+uv run python scripts/s09_calculate_minutes_outside_nominal.py
+uv run python scripts/s10_plot_cumulative_minutes_outside_nominal.py
 ```
 
-Generate weekly FFT CSVs (full spectrum for each week):
+Appendix outputs:
 
 ```bash
-uv run python src/grid_frequency_analysis/weekly_fft.py --window-size-seconds 14400
+uv run python scripts/sa4a_animate_sine_buildup.py
+uv run python scripts/sa5a_plot_fft_amplitudes_two_weeks.py
+uv run python scripts/sa5b_calculate_binned_weekly_amplitudes.py
+uv run python scripts/sa5c_plot_binned_amplitudes_over_time.py
+uv run python scripts/sa6a_modify_weekly_amplitudes.py
+uv run python scripts/sa6b_plot_modified_unmodified_baseline_amplitudes.py
+uv run python scripts/sa8a_reproduce_week_from_stft.py
+uv run python scripts/sa8b_plot_measured_reproduced_modified.py
 ```
 
-Outputs are written to `data/weekly_fft/<YYYY-WW>.csv` with columns:
-- `frequency_hz`
-- `period_s`
-- `amplitude`
-
-Aggregate FFT amplitudes by period bin (week rows, bin columns) and plot:
-
-```bash
-uv run python src/grid_frequency_analysis/weekly_fft_bin_means.py
-```
-
-Outputs:
-- `results/weekly_fft_bin_means.csv`
-- `results/plots/weekly_fft_bin_means.html`
-- `results/plots/weekly_fft_bin_means.png`
-
-Reconstruct a 4h signal from weekly FFT amplitudes, tile to week length, and compare:
-
-```bash
-uv run python src/grid_frequency_analysis/reconstruct_from_weekly_fft.py --week 2024-W15 --window-size-seconds 14400
-```
-
-Outputs:
-- `results/reconstruction/<week>_measured_vs_reconstructed.csv`
-- `results/reconstruction/<week>_measured_vs_reconstructed.html`
-- `results/reconstruction/<week>_measured_vs_reconstructed.png`
-
-### Download historical grid frequency only
-
-1. Edit dates in `src/grid_frequency_analysis/download_fingrid_data.py`
-2. Run:
-
-```bash
-python src/grid_frequency_analysis/download_fingrid_data.py
-```
-
-Data is downloaded as `.7z` files to `data/raw/`.
+## Reproducibility notes
+- Datasets are generated locally and should not be committed.
+- Quality filtering in S03 skips low-quality weeks and writes `results/quality_report.csv`.
+- Validation runs can start from `s04` when `D03` already exists.
 
 ## Data source
-
-[Fingrid open data](https://data.fingrid.fi/en/datasets/339), Frequency - historical data
+- Fingrid open data: https://data.fingrid.fi/en/datasets/339
