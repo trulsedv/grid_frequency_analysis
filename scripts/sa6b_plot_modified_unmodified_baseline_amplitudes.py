@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
+from utils import resolve_week_with_fallback
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,30 +25,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def resolve_week(requested_week: str, unmodified_dir: Path, modified_dir: Path) -> str:
-    """Resolve week label, with fallback to latest available intersection."""
-    requested_path = unmodified_dir / f"{requested_week}.csv"
-    requested_modified = modified_dir / f"{requested_week}.csv"
-    if requested_path.exists() and requested_modified.exists():
-        return requested_week
-
-    unmodified_weeks = {p.stem for p in unmodified_dir.glob("*.csv")}
-    modified_weeks = {p.stem for p in modified_dir.glob("*.csv")}
-    candidates = sorted(unmodified_weeks & modified_weeks)
-    if not candidates:
-        msg = "No overlapping week files found between unmodified and modified directories"
-        raise FileNotFoundError(msg)
-
-    fallback = candidates[-1]
-    print(f"Requested week {requested_week} not available; using {fallback}")
-    return fallback
-
-
 def main() -> None:
     """Run Sa6b appendix step."""
     args = parse_args()
 
-    week = resolve_week(args.week, Path(args.unmodified_dir), Path(args.modified_dir))
+    week = resolve_week_with_fallback(args.week, Path(args.unmodified_dir), Path(args.modified_dir))
     unmodified = pd.read_csv(Path(args.unmodified_dir) / f"{week}.csv")
     modified = pd.read_csv(Path(args.modified_dir) / f"{week}.csv")
     baseline = pd.read_csv(args.baseline_csv)

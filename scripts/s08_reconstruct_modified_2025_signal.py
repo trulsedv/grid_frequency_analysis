@@ -7,8 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
-NORMALIZATION_EPSILON = 1e-12
+from utils import decode_stft_overlap_add
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,39 +21,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-low-high", default="data/D11_modified_2025_weekly_1hz_low_high_periods")
     parser.add_argument("--out-low", default="data/D12_modified_2025_weekly_1hz_low_periods")
     return parser.parse_args()
-
-
-def starts_for_len(total_len: int, n: int, hop: int) -> list[int]:
-    """Compute overlap-add starts."""
-    starts = list(range(0, total_len - n + 1, hop))
-    if starts[-1] != total_len - n:
-        starts.append(total_len - n)
-    return starts
-
-
-def decode(  # noqa: PLR0913, PLR0917
-    stft_frames_bins: np.ndarray,
-    n: int,
-    hop: int,
-    padded_len: int,
-    orig_len: int,
-    pad: int,
-) -> np.ndarray:
-    """Reconstruct one time-domain signal from STFT frames using overlap-add."""
-    window = np.hanning(n)
-    starts = starts_for_len(padded_len, n, hop)
-    out = np.zeros(padded_len)
-    norm = np.zeros(padded_len)
-    for idx, start in enumerate(starts):
-        segment = np.fft.irfft(stft_frames_bins[idx], n=n).real
-        out[start : start + n] += segment * window
-        norm[start : start + n] += window * window
-
-    # Normalize overlap-add energy; epsilon avoids division spikes near edges.
-    valid = norm > NORMALIZATION_EPSILON
-    out[valid] /= norm[valid]
-    out[~valid] = 0.0
-    return out[pad : pad + orig_len]
 
 
 def reconstruct_one_week(stft_path: Path, out_path: Path) -> None:
@@ -71,7 +37,7 @@ def reconstruct_one_week(stft_path: Path, out_path: Path) -> None:
     frame_cols = [c for c in df.columns if c.startswith("frame_")]
     stft = np.column_stack([pd.Series(df[c]).map(complex).to_numpy() for c in frame_cols]).T
 
-    signal = decode(stft, n, hop, orig_len + 2 * pad, orig_len, pad)
+    signal = decode_stft_overlap_add(stft, n, hop, orig_len + 2 * pad, orig_len, pad)
     out_df = pd.DataFrame({"Value": signal})
     out_df.to_csv(out_path / f"{week}.csv", index=False)
 

@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
+from utils import parse_week_label
 
 
 def parse_args() -> argparse.Namespace:
@@ -17,12 +18,6 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def week_key(name: str) -> tuple[int, int]:
-    """Convert ISO week text (YYYY-Www) to sortable tuple."""
-    y, w = name.split("-W")
-    return int(y), int(w)
-
-
 def main() -> None:
     """Write D06 baseline spectrum from pre-cutoff weekly average spectra."""
     args = parse_args()
@@ -30,12 +25,12 @@ def main() -> None:
     out = Path(args.output_csv)
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    cutoff_key = week_key(args.cutoff_week)
+    cutoff_key = parse_week_label(args.cutoff_week)
 
     rows = []
     for p in sorted(in_dir.glob("*.csv")):
         wk = p.stem
-        if week_key(wk) >= cutoff_key:
+        if parse_week_label(wk) >= cutoff_key:
             continue
         df = pd.read_csv(p)
         rows.append(df[["period_s", "amplitude"]].rename(columns={"amplitude": wk}))

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
+from utils import resolve_week_with_fallback
 
 
 def parse_args() -> argparse.Namespace:
@@ -21,28 +22,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def resolve_week(requested_week: str, measured_dir: Path, reproduced_dir: Path, modified_dir: Path) -> str:
-    """Resolve week label, with fallback to latest overlap."""
-    requested_measured = measured_dir / f"{requested_week}.csv"
-    requested_reproduced = reproduced_dir / f"{requested_week}.csv"
-    requested_modified = modified_dir / f"{requested_week}.csv"
-    if requested_measured.exists() and requested_reproduced.exists() and requested_modified.exists():
-        return requested_week
-
-    measured = {path.stem for path in measured_dir.glob("*.csv")}
-    reproduced = {path.stem for path in reproduced_dir.glob("*.csv")}
-    modified = {path.stem for path in modified_dir.glob("*.csv")}
-    candidates = sorted(measured & reproduced & modified)
-
-    if not candidates:
-        msg = "No overlapping week files found for measured/reproduced/modified"
-        raise FileNotFoundError(msg)
-
-    fallback = candidates[-1]
-    print(f"Requested week {requested_week} not available; using {fallback}")
-    return fallback
-
-
 def main() -> None:
     """Run Sa8b appendix step."""
     args = parse_args()
@@ -51,7 +30,7 @@ def main() -> None:
     reproduced_dir = Path(args.reproduced_dir)
     modified_dir = Path(args.modified_dir)
 
-    week = resolve_week(args.week, measured_dir, reproduced_dir, modified_dir)
+    week = resolve_week_with_fallback(args.week, measured_dir, reproduced_dir, modified_dir)
 
     measured = pd.read_csv(measured_dir / f"{week}.csv")["Value"].to_numpy(dtype=float)
     reproduced = pd.read_csv(reproduced_dir / f"{week}.csv")["Value"].to_numpy(dtype=float)

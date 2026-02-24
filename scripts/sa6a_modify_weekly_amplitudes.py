@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from utils import parse_week_label
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,12 +21,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-year", type=int, default=2025)
     parser.add_argument("--output-dir", default="data/Da2_modified_weekly_amplitudes")
     return parser.parse_args()
-
-
-def parse_week(week_label: str) -> tuple[int, int]:
-    """Parse YYYY-Www week label."""
-    year_txt, week_txt = week_label.split("-W")
-    return int(year_txt), int(week_txt)
 
 
 def main() -> None:
@@ -47,7 +42,7 @@ def main() -> None:
     processed = 0
     for week_file in sorted(input_dir.glob("*.csv")):
         week_label = week_file.stem
-        year, _ = parse_week(week_label)
+        year, _ = parse_week_label(week_label)
         if year != args.target_year:
             continue
 

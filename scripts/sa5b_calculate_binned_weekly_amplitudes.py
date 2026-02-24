@@ -6,7 +6,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-from utils import DEFAULT_PERIOD_BINS
+from utils import DEFAULT_PERIOD_BINS, parse_week_label
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,12 +20,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def parse_week(week_label: str) -> tuple[int, int]:
-    """Parse week label YYYY-Www."""
-    year_txt, week_txt = week_label.split("-W")
-    return int(year_txt), int(week_txt)
-
-
 def main() -> None:
     """Run Sa5b appendix step."""
     args = parse_args()
@@ -36,7 +30,7 @@ def main() -> None:
     rows: list[dict[str, float | int | str]] = []
     for week_file in sorted(input_dir.glob("*.csv")):
         week_label = week_file.stem
-        year, week = parse_week(week_label)
+        year, week = parse_week_label(week_label)
         df = pd.read_csv(week_file)
 
         row: dict[str, float | int | str] = {

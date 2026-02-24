@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from utils import starts_for_len
 
 
 def parse_args() -> argparse.Namespace:
@@ -18,14 +19,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--overlap-fraction", type=float, default=0.5)
     p.add_argument("--limit-weeks", type=int, default=0)
     return p.parse_args()
-
-
-def starts_for_len(total_len: int, n: int, hop: int) -> list[int]:
-    """Return frame start indices, always including a final tail-aligned frame."""
-    starts = list(range(0, total_len - n + 1, hop))
-    if starts[-1] != total_len - n:
-        starts.append(total_len - n)
-    return starts
 
 
 def main() -> None:  # noqa: PLR0914
