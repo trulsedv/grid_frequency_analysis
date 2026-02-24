@@ -51,21 +51,43 @@
             - showing area between modifed 2025 (low periods) and modified 2025 (low and high periods) as red area
             - showing area between modified 2025 (low and high periods) and modified 2025 (all periods) as grey area
 
-There will be additional scripts that show the validity of some of the steps:
-- Plot comparrison the FFT-apmlitudes of two weeks (W22 in 2025 and 2024) to show certain period ranges has been dampend. {R3}
-- Plot comparing a unmodified FFT-apmlitudes (2025W22 average over the windows), a modified FFT-apmlitudes (2025W22 average over the windows), and the average FFT-apmlitudes pre cutoff. {R4}
-- Animation showing how sines can reprocude measured frequency (first hour of 2025W22). {R5}
-- Plot comparring measured frequency, frequency signal from STFT, and frequency signal from modified STFT. {R6}
-
-There are 10 scripts (list above). All should be its own file. Common code should be in utils.py.
-There are 16 datasets {Dx}. All should have its own folder.
-There are 6 results {Rx}. The figures should be both html and png. Can be stored in the root of the results folder. In total that should be 5 figures (10 files) and the quality report (1 file), so no more than 11 files in the results folder.
+All scripts, datasets, and results have been described above or below in the appendecies. There shouold not be more files except utils.py and the necessary files in root.
+The scripts, datasets, and results should have short and understandable names including the numberscheme that refer to the readme.
 
 The readme should be a short "scientific report" (as short as possible), and a quick intro to use the scripts. It should be feasible for an engineer to understand and make him/her be able to understand the result and critize the method of the analyzis.
 The final plot show that the reduction in minutes outside norm is mostly because of dampening of high period oscilation (balancing periods), but also significanlty by dampening of low period oscilations (frequency controll periods). This indicate that improved balancing is probably the main cause of the reduction, but improved frequency control has contributed a significant part.
 
-The scripts, datasets, and results should have short and understandable names that refer to the readme.
-
 The datasets should not be pushed to github.
 
 This should the only file in the docs folder.
+
+Appendecies
+
+4a. Animate adding sines to fitt the frequency of the first hour of 2025W22
+    - IN: weekly 1 Hz .csv {D3} & weekly STFT .csv {D4}
+    - OUT: animation {Ra1}
+5a. Plot FFT-amplitudes (D5, average for windows) of W22 in 2025 and 2024
+    - IN: weekly amplitudes .csv {D5}
+    - OUT: figure showing FFT-amplitudes {Ra2}
+        - both x-axis and y-axis should be log
+5b. Calculate the average ampltidue per week for each defined bin
+    - IN: weekly amplitudes .csv {D5}
+    - OUT: bined ampltidues .csv {Da1} (columns bins, rows weeks, values average ampltidue (in bin all windows))
+5c. Plot the average ampltitudes
+    - IN: bined ampltidues .csv {Da1}
+    - OUT: figure showing the amplitude of the bins over time {Ra3}
+        - y-axis should be log
+6a. Modify the weekly amplitudes
+    - IN: weekly amplitudes .csv {D5} & ampltidues pre cutoff .csv {D6}
+    - OUT: modified weekly amplitudes .csv (Da2)
+6b. Plot unmodified and modified weekly amplitudes, and ampltidues pre cutoff
+    - IN: weekly amplitudes .csv {D5} & modified weekly amplitudes .csv (Da2) & ampltidues pre cutoff .csv {D6}
+    - OUT: figure showing FFT-amplitudes {Ra4}
+        - both x-axis and y-axis should be log
+8a. Calculate frequency signal for 2025W22 from FFTs
+    - IN: weekly STFT .csv {D4}
+    - OUT: reproduced weekly 1 Hz .csv {Da3}
+8b. Plot 2025W22 measured, reproduced from SFTF, and reproduced from modifed SFTF
+    - IN: weekly 1 Hz .csv {D3} & reproduced weekly 1 Hz .csv {Da3} & modified 2025 weekly 1 Hz .csv  (low and high periods) {D11}
+    - OUT: figure showing the frequency signals {Ra5}
+        - all lines should be a bit transparent since they will be on top of eachother a lot
