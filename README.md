@@ -1,11 +1,7 @@
 # Grid frequency analysis (2015–2025)
 
 ## Summary
-**Context:** 2025 has noticeably fewer minutes outside the 49.9–50.1 Hz band than earlier years.
-
-**Construction (argument):** We build counterfactual 2025 signals by replacing selected frequency-range amplitudes with pre-cutoff baseline amplitudes, while keeping the observed 2025 phase structure. We then recompute minutes outside band and compare cumulative curves. If a modified curve moves toward historical behavior, that period range is a plausible contributor to the improvement.
-
-**Conclusion:** In this analysis, the largest share of the reduction is associated with damping in high-period (balancing) oscillations, and a meaningful share is associated with damping in low-period (frequency-control) oscillations. This supports an attribution claim (what is consistent with the data under this construction), not a standalone proof of real-world root cause.
+In 2025, the grid has noticeably fewer minutes outside the 49.9–50.1 Hz band than in earlier years, and this project tests how much of that change is consistent with shifts in specific oscillation ranges. The method builds counterfactual 2025 signals by replacing selected spectral amplitudes with pre-cutoff baseline amplitudes while preserving observed 2025 phase structure, then recomputes minutes outside band and compares cumulative curves. The results indicate that most of the reduction is associated with damping in high-period (balancing) oscillations, with a meaningful additional contribution from low-period (frequency-control) oscillations; this is an attribution result under the model construction, not a standalone proof of real-world root cause.
 
 ## Method (pipeline scripts S01–S10)
 1. **S01 – Download frequency archives**
