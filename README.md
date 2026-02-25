@@ -78,7 +78,7 @@ Period bins used in spectral attribution:
 - Results depend on cutoff week and period-bin definitions.
 
 ## Disclaimer
-This method is a structured "what-if" test. It is consistent with the summary above: the results show which oscillation ranges are most strongly associated with the observed improvement when we run this specific counterfactual construction. The method supports that interpretation, but it does not by itself prove the full real-world cause.
+This method is a structured "what-if" test. The results show which oscillation ranges are most strongly associated with the observed improvement, but it does not prove what the real-world cause of the improved frequnecy is.
 
 ## Run
 Install dependencies:
