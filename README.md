@@ -78,7 +78,7 @@ Period bins used in spectral attribution:
 - Results depend on cutoff week and period-bin definitions.
 
 ## Disclaimer
-This method is a structured "what-if" test. It asks: if we change selected oscillation ranges in 2025 to look more like pre-cutoff years, how much does the out-of-band metric change? That helps estimate which ranges are important in the data and model used here. But it does not, by itself, prove the real-world root cause. To make a stronger causal claim, you would need extra evidence (for example operational records, market/control changes, and robustness checks across multiple alternative model choices).
+This method is a structured "what-if" test. It is consistent with the summary above: the results show which oscillation ranges are most strongly associated with the observed improvement when we run this specific counterfactual construction. The method supports that interpretation, but it does not by itself prove the full real-world cause.
 
 ## Run
 Install dependencies:
@@ -87,7 +87,7 @@ Install dependencies:
 uv sync
 ```
 
-Run full pipeline (note the three first will takr time to finish):
+Run full pipeline (note the first three will take time to finish):
 
 ```bash
 uv run python scripts/s01_download_frequency_archives.py
