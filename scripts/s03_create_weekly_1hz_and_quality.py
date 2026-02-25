@@ -11,6 +11,7 @@ import pandas as pd
 
 MAX_FILLED_ROWS = 7_200  # 2 hours at 1 Hz
 MAX_LONGEST_SYNTHETIC_STREAK_SECONDS = 1_800  # 30 minutes
+DST_TRANSITION_SECONDS = 3_600
 MIN_VALID_FREQUENCY_HZ = 45.0
 MAX_VALID_FREQUENCY_HZ = 55.0
 
@@ -189,11 +190,19 @@ def write_week_csv(
         status="saved",
     )
 
-    if filled_rows > MAX_FILLED_ROWS or longest_streak > MAX_LONGEST_SYNTHETIC_STREAK_SECONDS:
+    dst_adjustment = dst_forward_gap_seconds(year, week)
+    effective_filled_rows = max(0, filled_rows - dst_adjustment)
+    effective_longest_streak = max(0, longest_streak - dst_adjustment)
+
+    if (
+        effective_filled_rows > MAX_FILLED_ROWS
+        or effective_longest_streak > MAX_LONGEST_SYNTHETIC_STREAK_SECONDS
+    ):
         quality.status = "skipped_quality"
         print(
             f"Skipped {year}-W{week:02d}: invalid_rows_replaced={invalid_rows_replaced}, "
-            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}",
+            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}, "
+            f"dst_adjustment_seconds={dst_adjustment}",
         )
         del weekly_data[key]
         return quality
@@ -265,6 +274,14 @@ def get_expected_week_index(year: int, week: int) -> pd.DatetimeIndex:
     expected_start = pd.Timestamp.fromisocalendar(year, week, 1)
     expected_end = expected_start + pd.Timedelta(weeks=1) - pd.Timedelta(seconds=1)
     return pd.date_range(start=expected_start, end=expected_end, freq="1s")
+
+
+def dst_forward_gap_seconds(year: int, week: int) -> int:
+    """Return 3600 for ISO weeks containing the Oslo spring-forward DST jump."""
+    week_start = pd.Timestamp.fromisocalendar(year, week, 1).tz_localize("Europe/Oslo")
+    week_end = (week_start + pd.Timedelta(weeks=1) - pd.Timedelta(seconds=1)).tz_convert("Europe/Oslo")
+    offset_change = int((week_end.utcoffset() - week_start.utcoffset()).total_seconds())
+    return DST_TRANSITION_SECONDS if offset_change > 0 else 0
 
 
 def skip_csv_file(csv_file: Path, output_dir: Path) -> bool:
