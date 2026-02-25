@@ -11,7 +11,6 @@ import pandas as pd
 
 MAX_FILLED_ROWS = 7_200  # 2 hours at 1 Hz
 MAX_LONGEST_SYNTHETIC_STREAK_SECONDS = 1_800  # 30 minutes
-DST_TRANSITION_SECONDS = 3_600
 MIN_VALID_FREQUENCY_HZ = 45.0
 MAX_VALID_FREQUENCY_HZ = 55.0
 
@@ -93,11 +92,17 @@ def main() -> None:
             files_empty += 1
             continue
 
-        # Fast parse with explicit format (10 Hz source layout), then shift to Oslo.
-        # Helsinki and Oslo stay 1 hour apart through DST transitions.
+        # Parse with explicit format for speed, then keep timestamps timezone-aware.
+        # Let timezone conversion + weekly reindex handle DST naturally.
         df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce")
         df = df.dropna(subset=["Time"])
-        df["Time"] = (df["Time"] - pd.Timedelta(hours=1)).dt.floor("1s")
+        df["Time"] = (
+            df["Time"]
+            .dt.tz_localize("Europe/Helsinki", ambiguous="infer", nonexistent="NaT")
+            .dt.tz_convert("Europe/Oslo")
+            .dt.floor("1s")
+        )
+        df = df.dropna(subset=["Time"])
         df = df.groupby("Time", as_index=False, sort=False)["Value"].mean()
 
         iso = df["Time"].dt.isocalendar()
@@ -190,19 +195,11 @@ def write_week_csv(
         status="saved",
     )
 
-    dst_adjustment = dst_forward_gap_seconds(year, week)
-    effective_filled_rows = max(0, filled_rows - dst_adjustment)
-    effective_longest_streak = max(0, longest_streak - dst_adjustment)
-
-    if (
-        effective_filled_rows > MAX_FILLED_ROWS
-        or effective_longest_streak > MAX_LONGEST_SYNTHETIC_STREAK_SECONDS
-    ):
+    if filled_rows > MAX_FILLED_ROWS or longest_streak > MAX_LONGEST_SYNTHETIC_STREAK_SECONDS:
         quality.status = "skipped_quality"
         print(
             f"Skipped {year}-W{week:02d}: invalid_rows_replaced={invalid_rows_replaced}, "
-            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}, "
-            f"dst_adjustment_seconds={dst_adjustment}",
+            f"filled_rows={filled_rows}, longest_synthetic_streak_seconds={longest_streak}",
         )
         del weekly_data[key]
         return quality
@@ -270,18 +267,10 @@ def longest_true_streak(mask: np.ndarray) -> int:
 
 
 def get_expected_week_index(year: int, week: int) -> pd.DatetimeIndex:
-    """Generate expected 1 Hz timestamps for one ISO week in Oslo local clock."""
-    expected_start = pd.Timestamp.fromisocalendar(year, week, 1)
-    expected_end = expected_start + pd.Timedelta(weeks=1) - pd.Timedelta(seconds=1)
-    return pd.date_range(start=expected_start, end=expected_end, freq="1s")
-
-
-def dst_forward_gap_seconds(year: int, week: int) -> int:
-    """Return 3600 for ISO weeks containing the Oslo spring-forward DST jump."""
-    week_start = pd.Timestamp.fromisocalendar(year, week, 1).tz_localize("Europe/Oslo")
-    week_end = (week_start + pd.Timedelta(weeks=1) - pd.Timedelta(seconds=1)).tz_convert("Europe/Oslo")
-    offset_change = int((week_end.utcoffset() - week_start.utcoffset()).total_seconds())
-    return DST_TRANSITION_SECONDS if offset_change > 0 else 0
+    """Generate expected 1 Hz timestamps for one ISO week in Oslo timezone."""
+    expected_start = pd.Timestamp.fromisocalendar(year, week, 1).tz_localize("Europe/Oslo")
+    expected_end_exclusive = expected_start + pd.DateOffset(weeks=1)
+    return pd.date_range(start=expected_start, end=expected_end_exclusive, freq="1s", inclusive="left")
 
 
 def skip_csv_file(csv_file: Path, output_dir: Path) -> bool:
