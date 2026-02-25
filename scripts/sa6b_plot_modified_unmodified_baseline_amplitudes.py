@@ -9,21 +9,6 @@ import pandas as pd
 from utils import plot_period_spectrum_series, resolve_week_with_fallback
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse CLI arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", default="2025-W22")
-    parser.add_argument("--unmodified-dir", default="data/D05_weekly_stft_avg_amplitude")
-    parser.add_argument("--modified-dir", default="data/Da2_modified_weekly_amplitudes")
-    parser.add_argument(
-        "--baseline-csv",
-        default="data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv",
-    )
-    parser.add_argument("--output-html", default="results/weekly_amplitude_compare.html")
-    parser.add_argument("--output-png", default="results/weekly_amplitude_compare.png")
-    return parser.parse_args()
-
-
 def main() -> None:
     """Run Sa6b appendix step."""
     args = parse_args()
@@ -47,6 +32,21 @@ def main() -> None:
         output_html=args.output_html,
         output_png=args.output_png,
     )
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--week", default="2025-W22")
+    parser.add_argument("--unmodified-dir", default="data/D05_weekly_stft_avg_amplitude")
+    parser.add_argument("--modified-dir", default="data/Da2_modified_weekly_amplitudes")
+    parser.add_argument(
+        "--baseline-csv",
+        default="data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv",
+    )
+    parser.add_argument("--output-html", default="results/weekly_amplitude_compare.html")
+    parser.add_argument("--output-png", default="results/weekly_amplitude_compare.png")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

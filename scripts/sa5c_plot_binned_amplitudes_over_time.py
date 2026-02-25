@@ -10,18 +10,6 @@ import plotly.graph_objects as go
 from utils import DEFAULT_PERIOD_BINS
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse CLI arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--input-csv",
-        default="data/Da1_binned_weekly_amplitudes/binned_weekly_amplitudes.csv",
-    )
-    parser.add_argument("--output-html", default="results/binned_amplitudes_over_time.html")
-    parser.add_argument("--output-png", default="results/binned_amplitudes_over_time.png")
-    return parser.parse_args()
-
-
 def main() -> None:
     """Run Sa5c appendix step."""
     args = parse_args()
@@ -54,11 +42,23 @@ def main() -> None:
     fig.write_html(output_html, include_plotlyjs="cdn")
     try:
         fig.write_image(output_png, width=1600, height=900, scale=2)
-    except Exception as exc:
+    except (RuntimeError, ValueError) as exc:
         print(f"PNG export failed: {exc}")
 
     print(f"Saved {output_html}")
     print(f"Saved {output_png}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--input-csv",
+        default="data/Da1_binned_weekly_amplitudes/binned_weekly_amplitudes.csv",
+    )
+    parser.add_argument("--output-html", default="results/binned_amplitudes_over_time.html")
+    parser.add_argument("--output-png", default="results/binned_amplitudes_over_time.png")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

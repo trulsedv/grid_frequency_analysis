@@ -23,6 +23,40 @@ class S07Context:
     src_dir: Path
 
 
+def main() -> None:
+    """Run S07: compute scale maps and write three modified STFT variants."""
+    args = parse_args()
+
+    src_dir = Path(args.source_stft_dir)
+    avg_dir = Path(args.weekly_avg_dir)
+    baseline = pd.read_csv(args.baseline_csv)
+
+    out_all = Path(args.out_all)
+    out_low_high = Path(args.out_low_high)
+    out_low = Path(args.out_low)
+    out_all.mkdir(parents=True, exist_ok=True)
+    out_low_high.mkdir(parents=True, exist_ok=True)
+    out_low.mkdir(parents=True, exist_ok=True)
+
+    ctx = S07Context(
+        avg_dir=avg_dir,
+        baseline=baseline,
+        out_all=out_all,
+        out_low_high=out_low_high,
+        out_low=out_low,
+        src_dir=src_dir,
+    )
+
+    processed = 0
+    for stft_csv in sorted(src_dir.glob(f"{args.year}-W*.csv")):
+        if stft_csv.name.endswith("_meta.csv"):
+            continue
+        if process_week(stft_csv, ctx):
+            processed += 1
+
+    print(f"S07 summary: processed={processed}")
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -113,40 +147,6 @@ def process_week(stft_csv: Path, ctx: S07Context) -> bool:
     write_scaled_stft(stft_csv, ctx.out_low / f"{week}.csv", scale_low)
     copy_meta_if_present(ctx.src_dir, week, [ctx.out_all, ctx.out_low_high, ctx.out_low])
     return True
-
-
-def main() -> None:
-    """Run S07: compute scale maps and write three modified STFT variants."""
-    args = parse_args()
-
-    src_dir = Path(args.source_stft_dir)
-    avg_dir = Path(args.weekly_avg_dir)
-    baseline = pd.read_csv(args.baseline_csv)
-
-    out_all = Path(args.out_all)
-    out_low_high = Path(args.out_low_high)
-    out_low = Path(args.out_low)
-    out_all.mkdir(parents=True, exist_ok=True)
-    out_low_high.mkdir(parents=True, exist_ok=True)
-    out_low.mkdir(parents=True, exist_ok=True)
-
-    ctx = S07Context(
-        avg_dir=avg_dir,
-        baseline=baseline,
-        out_all=out_all,
-        out_low_high=out_low_high,
-        out_low=out_low,
-        src_dir=src_dir,
-    )
-
-    processed = 0
-    for stft_csv in sorted(src_dir.glob(f"{args.year}-W*.csv")):
-        if stft_csv.name.endswith("_meta.csv"):
-            continue
-        if process_week(stft_csv, ctx):
-            processed += 1
-
-    print(f"S07 summary: processed={processed}")
 
 
 if __name__ == "__main__":

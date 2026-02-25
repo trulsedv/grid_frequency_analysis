@@ -13,6 +13,21 @@ import py7zr
 from py7zr.exceptions import Bad7zFile
 
 
+def main() -> None:
+    """Run S02 and extract D01 archives into D02 CSVs."""
+    raw_dir = Path("data/D01_raw_archives")
+    out_dir = Path("data/D02_extracted_10hz_csv")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    for zip_file in sorted(raw_dir.glob("*.zip")):
+        if should_extract_archive(zip_file, out_dir):
+            extract_file(zip_file, out_dir, archive_type="zip")
+
+    for seven_z_file in sorted(raw_dir.glob("*.7z")):
+        if should_extract_archive(seven_z_file, out_dir):
+            extract_file(seven_z_file, out_dir, archive_type="7z")
+
+
 def should_extract_archive(compressed_file: Path, csv_dir: Path) -> bool:
     """Return True if no extracted CSVs exist yet for this archive month."""
     match = re.search(r"(\d{4}-\d{2})", compressed_file.name)
@@ -75,21 +90,6 @@ def extract_file(compressed_file: Path, output_dir: Path, archive_type: str) -> 
 
     shutil.rmtree(temp_dir)
     print(f"✓ Renamed and moved {len(csv_files)} CSV files to {output_dir}\n")
-
-
-def main() -> None:
-    """Run S02 and extract D01 archives into D02 CSVs."""
-    raw_dir = Path("data/D01_raw_archives")
-    out_dir = Path("data/D02_extracted_10hz_csv")
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    for zip_file in sorted(raw_dir.glob("*.zip")):
-        if should_extract_archive(zip_file, out_dir):
-            extract_file(zip_file, out_dir, archive_type="zip")
-
-    for seven_z_file in sorted(raw_dir.glob("*.7z")):
-        if should_extract_archive(seven_z_file, out_dir):
-            extract_file(seven_z_file, out_dir, archive_type="7z")
 
 
 if __name__ == "__main__":

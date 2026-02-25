@@ -10,6 +10,19 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
+def main() -> None:
+    """Run Sa4a: load segment, build frames, and save animation HTML."""
+    args = parse_args()
+    segment = load_segment(args)
+    t, frames = build_reconstruction_frames(segment, args.component_step)
+    fig = build_figure(t, segment, frames)
+
+    out = Path(args.output)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.write_html(out, include_plotlyjs="cdn")
+    print(f"Saved {out}")
+
+
 def parse_args() -> argparse.Namespace:
     """Parse Sa4a CLI arguments."""
     p = argparse.ArgumentParser(description=__doc__)
@@ -103,19 +116,6 @@ def build_figure(t: np.ndarray, segment: np.ndarray, frames: list[tuple[str, np.
         template="plotly_white",
     )
     return fig
-
-
-def main() -> None:
-    """Run Sa4a: load segment, build frames, and save animation HTML."""
-    args = parse_args()
-    segment = load_segment(args)
-    t, frames = build_reconstruction_frames(segment, args.component_step)
-    fig = build_figure(t, segment, frames)
-
-    out = Path(args.output)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.write_html(out, include_plotlyjs="cdn")
-    print(f"Saved {out}")
 
 
 if __name__ == "__main__":

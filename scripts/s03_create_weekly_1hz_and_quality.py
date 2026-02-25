@@ -48,6 +48,59 @@ class S03Counters:
     files_empty: int = 0
 
 
+def main() -> None:
+    """Run S03: iterate daily files, write weekly outputs, and update quality report."""
+    args = parse_args()
+    input_dir = Path(args.input_dir)
+    output_dir = Path(args.output_dir)
+    report_path = Path(args.report_path)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    from_date = pd.Timestamp(args.from_date).date() if args.from_date else None
+    to_date = pd.Timestamp(args.to_date).date() if args.to_date else None
+    csv_files = sorted(input_dir.glob("*.csv"))
+    if args.limit_files > 0:
+        csv_files = csv_files[: args.limit_files]
+
+    weekly_data: dict[tuple[int, int], list[pd.DataFrame]] = {}
+    ctx = S03Context(weekly_data, output_dir, report_path, args.overwrite_existing_weeks)
+    prev_year: int | None = None
+    prev_week: int | None = None
+    counters = S03Counters()
+
+    for csv_file in csv_files:
+        file_day = pd.Timestamp(csv_file.stem).date()
+        if (from_date and file_day < from_date) or (to_date and file_day > to_date):
+            continue
+
+        counters.files_total += 1
+        if (not args.overwrite_existing_weeks) and skip_csv_file(csv_file, output_dir):
+            counters.files_skipped += 1
+            continue
+
+        df = parse_and_prepare_daily(csv_file)
+        if df is None:
+            counters.files_empty += 1
+            continue
+
+        for (year, week), week_data in df.groupby(["ISO_Year", "ISO_Week"], sort=False):
+            if prev_week is not None and prev_week != week:
+                counters.weeks_evaluated += flush_previous_week(ctx, prev_year, prev_week)
+            weekly_data.setdefault((int(year), int(week)), []).append(week_data)
+            prev_year, prev_week = int(year), int(week)
+
+    counters.weeks_evaluated += flush_previous_week(ctx, prev_year, prev_week)
+
+    if counters.weeks_evaluated == 0 and report_path.exists():
+        print(f"Quality report unchanged: {report_path}")
+    print(
+        "s03 summary: "
+        f"files_total={counters.files_total}, files_skipped={counters.files_skipped}, "
+        f"files_empty={counters.files_empty}, weeks_evaluated={counters.weeks_evaluated}",
+    )
+
+
 def parse_args() -> argparse.Namespace:
     """Parse S03 CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -107,59 +160,6 @@ def flush_previous_week(ctx: S03Context, prev_year: int | None, prev_week: int |
         return 0
     write_quality_report([quality], ctx.report_path)
     return 1
-
-
-def main() -> None:
-    """Run S03: iterate daily files, write weekly outputs, and update quality report."""
-    args = parse_args()
-    input_dir = Path(args.input_dir)
-    output_dir = Path(args.output_dir)
-    report_path = Path(args.report_path)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-
-    from_date = pd.Timestamp(args.from_date).date() if args.from_date else None
-    to_date = pd.Timestamp(args.to_date).date() if args.to_date else None
-    csv_files = sorted(input_dir.glob("*.csv"))
-    if args.limit_files > 0:
-        csv_files = csv_files[: args.limit_files]
-
-    weekly_data: dict[tuple[int, int], list[pd.DataFrame]] = {}
-    ctx = S03Context(weekly_data, output_dir, report_path, args.overwrite_existing_weeks)
-    prev_year: int | None = None
-    prev_week: int | None = None
-    counters = S03Counters()
-
-    for csv_file in csv_files:
-        file_day = pd.Timestamp(csv_file.stem).date()
-        if (from_date and file_day < from_date) or (to_date and file_day > to_date):
-            continue
-
-        counters.files_total += 1
-        if (not args.overwrite_existing_weeks) and skip_csv_file(csv_file, output_dir):
-            counters.files_skipped += 1
-            continue
-
-        df = parse_and_prepare_daily(csv_file)
-        if df is None:
-            counters.files_empty += 1
-            continue
-
-        for (year, week), week_data in df.groupby(["ISO_Year", "ISO_Week"], sort=False):
-            if prev_week is not None and prev_week != week:
-                counters.weeks_evaluated += flush_previous_week(ctx, prev_year, prev_week)
-            weekly_data.setdefault((int(year), int(week)), []).append(week_data)
-            prev_year, prev_week = int(year), int(week)
-
-    counters.weeks_evaluated += flush_previous_week(ctx, prev_year, prev_week)
-
-    if counters.weeks_evaluated == 0 and report_path.exists():
-        print(f"Quality report unchanged: {report_path}")
-    print(
-        "s03 summary: "
-        f"files_total={counters.files_total}, files_skipped={counters.files_skipped}, "
-        f"files_empty={counters.files_empty}, weeks_evaluated={counters.weeks_evaluated}",
-    )
 
 
 def write_week_csv(

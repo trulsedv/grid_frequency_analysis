@@ -10,6 +10,17 @@ import pandas as pd
 from utils import decode_stft_overlap_add
 
 
+def main() -> None:
+    """Run S08 pipeline step."""
+    args = parse_args()
+
+    count_all = process_variant(Path(args.stft_all), Path(args.out_all), args.year)
+    count_lh = process_variant(Path(args.stft_low_high), Path(args.out_low_high), args.year)
+    count_low = process_variant(Path(args.stft_low), Path(args.out_low), args.year)
+
+    print(f"S08 summary: all={count_all}, low_high={count_lh}, low={count_low}")
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -52,17 +63,6 @@ def process_variant(stft_dir: Path, out_dir: Path, year: int) -> int:
         reconstruct_one_week(stft_path, out_dir)
         processed += 1
     return processed
-
-
-def main() -> None:
-    """Run S08 pipeline step."""
-    args = parse_args()
-
-    count_all = process_variant(Path(args.stft_all), Path(args.out_all), args.year)
-    count_lh = process_variant(Path(args.stft_low_high), Path(args.out_low_high), args.year)
-    count_low = process_variant(Path(args.stft_low), Path(args.out_low), args.year)
-
-    print(f"S08 summary: all={count_all}, low_high={count_lh}, low={count_low}")
 
 
 if __name__ == "__main__":

@@ -10,19 +10,6 @@ import pandas as pd
 from utils import parse_week_label
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse CLI arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
-    parser.add_argument(
-        "--baseline-csv",
-        default="data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv",
-    )
-    parser.add_argument("--target-year", type=int, default=2025)
-    parser.add_argument("--output-dir", default="data/Da2_modified_weekly_amplitudes")
-    return parser.parse_args()
-
-
 def main() -> None:
     """Run Sa6a appendix step."""
     args = parse_args()
@@ -69,6 +56,19 @@ def main() -> None:
         processed += 1
 
     print(f"Sa6a summary: processed={processed}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
+    parser.add_argument(
+        "--baseline-csv",
+        default="data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv",
+    )
+    parser.add_argument("--target-year", type=int, default=2025)
+    parser.add_argument("--output-dir", default="data/Da2_modified_weekly_amplitudes")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

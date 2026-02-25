@@ -11,6 +11,21 @@ NOMINAL_LOW_HZ = 49.9
 NOMINAL_HIGH_HZ = 50.1
 
 
+def main() -> None:
+    """Run S09 pipeline step."""
+    args = parse_args()
+
+    d13 = calculate_minutes_for_dir(Path(args.unmodified_dir))
+    d14 = calculate_minutes_for_dir(Path(args.modified_all_dir))
+    d15 = calculate_minutes_for_dir(Path(args.modified_low_high_dir))
+    d16 = calculate_minutes_for_dir(Path(args.modified_low_dir))
+
+    save_dataset(d13, Path(args.output_d13))
+    save_dataset(d14, Path(args.output_d14))
+    save_dataset(d15, Path(args.output_d15))
+    save_dataset(d16, Path(args.output_d16))
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -69,21 +84,6 @@ def save_dataset(df: pd.DataFrame, output_csv: Path) -> None:
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_csv, index=False)
     print(f"Saved {output_csv}")
-
-
-def main() -> None:
-    """Run S09 pipeline step."""
-    args = parse_args()
-
-    d13 = calculate_minutes_for_dir(Path(args.unmodified_dir))
-    d14 = calculate_minutes_for_dir(Path(args.modified_all_dir))
-    d15 = calculate_minutes_for_dir(Path(args.modified_low_high_dir))
-    d16 = calculate_minutes_for_dir(Path(args.modified_low_dir))
-
-    save_dataset(d13, Path(args.output_d13))
-    save_dataset(d14, Path(args.output_d14))
-    save_dataset(d15, Path(args.output_d15))
-    save_dataset(d16, Path(args.output_d16))
 
 
 if __name__ == "__main__":

@@ -10,18 +10,6 @@ import plotly.graph_objects as go
 from utils import resolve_week_with_fallback
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse CLI arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", default="2025-W22")
-    parser.add_argument("--measured-dir", default="data/D03_weekly_1hz_csv")
-    parser.add_argument("--reproduced-dir", default="data/Da3_reproduced_weekly_1hz")
-    parser.add_argument("--modified-dir", default="data/D11_modified_2025_weekly_1hz_low_high_periods")
-    parser.add_argument("--output-html", default="results/week_signal_compare.html")
-    parser.add_argument("--output-png", default="results/week_signal_compare.png")
-    return parser.parse_args()
-
-
 def main() -> None:
     """Run Sa8b appendix step."""
     args = parse_args()
@@ -82,11 +70,23 @@ def main() -> None:
     fig.write_html(output_html, include_plotlyjs="cdn")
     try:
         fig.write_image(output_png, width=1600, height=900, scale=2)
-    except Exception as exc:
+    except (RuntimeError, ValueError) as exc:
         print(f"PNG export failed: {exc}")
 
     print(f"Saved {output_html}")
     print(f"Saved {output_png}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--week", default="2025-W22")
+    parser.add_argument("--measured-dir", default="data/D03_weekly_1hz_csv")
+    parser.add_argument("--reproduced-dir", default="data/Da3_reproduced_weekly_1hz")
+    parser.add_argument("--modified-dir", default="data/D11_modified_2025_weekly_1hz_low_high_periods")
+    parser.add_argument("--output-html", default="results/week_signal_compare.html")
+    parser.add_argument("--output-png", default="results/week_signal_compare.png")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

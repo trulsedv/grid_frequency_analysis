@@ -9,15 +9,6 @@ import numpy as np
 import pandas as pd
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse S05 CLI arguments."""
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--input-dir", default="data/D04_weekly_stft")
-    p.add_argument("--output-dir", default="data/D05_weekly_stft_avg_amplitude")
-    p.add_argument("--limit-weeks", type=int, default=0)
-    return p.parse_args()
-
-
 def main() -> None:
     """Compute one amplitude-vs-period CSV per week by averaging STFT frames."""
     args = parse_args()
@@ -47,6 +38,15 @@ def main() -> None:
         processed += 1
 
     print(f"s05 summary: processed={processed}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse S05 CLI arguments."""
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--input-dir", default="data/D04_weekly_stft")
+    p.add_argument("--output-dir", default="data/D05_weekly_stft_avg_amplitude")
+    p.add_argument("--limit-weeks", type=int, default=0)
+    return p.parse_args()
 
 
 if __name__ == "__main__":

@@ -9,6 +9,13 @@ from pathlib import Path
 import requests
 
 
+def main() -> None:
+    """Run S01 and download archives into D01."""
+    args = parse_args()
+    urls = generate_fingrid_urls(args.from_date, args.to_date)
+    download_fingrid_data(urls, output_dir=args.output_dir, verbose=args.verbose)
+
+
 def parse_args() -> argparse.Namespace:
     """Parse S01 CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -129,13 +136,6 @@ def download_fingrid_data(urls: list[list[str]], output_dir: str, *, verbose: bo
         "Download summary: "
         f"downloaded={downloaded_months}, skipped={skipped_months}, failed={failed_months}",
     )
-
-
-def main() -> None:
-    """Run S01 and download archives into D01."""
-    args = parse_args()
-    urls = generate_fingrid_urls(args.from_date, args.to_date)
-    download_fingrid_data(urls, output_dir=args.output_dir, verbose=args.verbose)
 
 
 if __name__ == "__main__":

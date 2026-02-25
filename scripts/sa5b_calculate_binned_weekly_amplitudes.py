@@ -9,17 +9,6 @@ import pandas as pd
 from utils import DEFAULT_PERIOD_BINS, parse_week_label
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse CLI arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
-    parser.add_argument(
-        "--output-csv",
-        default="data/Da1_binned_weekly_amplitudes/binned_weekly_amplitudes.csv",
-    )
-    return parser.parse_args()
-
-
 def main() -> None:
     """Run Sa5b appendix step."""
     args = parse_args()
@@ -47,6 +36,17 @@ def main() -> None:
     out = pd.DataFrame(rows).sort_values(["year", "iso_week"]).reset_index(drop=True)
     out.to_csv(output_csv, index=False)
     print(f"Saved {output_csv}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
+    parser.add_argument(
+        "--output-csv",
+        default="data/Da1_binned_weekly_amplitudes/binned_weekly_amplitudes.csv",
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

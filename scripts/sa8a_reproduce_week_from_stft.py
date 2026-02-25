@@ -10,15 +10,6 @@ import pandas as pd
 from utils import decode_stft_overlap_add, resolve_week_with_fallback
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse CLI arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", default="2025-W22")
-    parser.add_argument("--stft-dir", default="data/D04_weekly_stft")
-    parser.add_argument("--output-dir", default="data/Da3_reproduced_weekly_1hz")
-    return parser.parse_args()
-
-
 def main() -> None:
     """Run Sa8a appendix step."""
     args = parse_args()
@@ -44,6 +35,15 @@ def main() -> None:
     out_csv = out_dir / f"{week}.csv"
     pd.DataFrame({"Value": reproduced}).to_csv(out_csv, index=False)
     print(f"Saved {out_csv}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--week", default="2025-W22")
+    parser.add_argument("--stft-dir", default="data/D04_weekly_stft")
+    parser.add_argument("--output-dir", default="data/Da3_reproduced_weekly_1hz")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

@@ -9,15 +9,6 @@ import pandas as pd
 from utils import parse_week_label
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse S06 CLI arguments."""
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
-    p.add_argument("--cutoff-week", default="2024-W22", help="Exclude this week and later")
-    p.add_argument("--output-csv", default="data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv")
-    return p.parse_args()
-
-
 def main() -> None:
     """Write D06 baseline spectrum from pre-cutoff weekly average spectra."""
     args = parse_args()
@@ -47,6 +38,15 @@ def main() -> None:
     merged["amplitude"] = merged[amp_cols].mean(axis=1)
     merged[["period_s", "amplitude"]].to_csv(out, index=False)
     print(f"Saved {out}")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse S06 CLI arguments."""
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
+    p.add_argument("--cutoff-week", default="2024-W22", help="Exclude this week and later")
+    p.add_argument("--output-csv", default="data/D06_baseline_pre_cutoff_amplitude/baseline_pre_cutoff.csv")
+    return p.parse_args()
 
 
 if __name__ == "__main__":

@@ -10,6 +10,34 @@ import pandas as pd
 from utils import starts_for_len
 
 
+def main() -> None:
+    """Run S04: iterate weeks, compute STFT files, and print summary."""
+    args = parse_args()
+    n = args.window_size_seconds
+    hop = max(1, round(n * (1.0 - args.overlap_fraction)))
+    pad = n // 2
+
+    in_dir = Path(args.input_dir)
+    out_dir = Path(args.output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    weeks = sorted(in_dir.glob("*.csv"))
+    if args.limit_weeks > 0:
+        weeks = weeks[: args.limit_weeks]
+
+    processed = 0
+    skipped = 0
+    for week_file in weeks:
+        if process_week(week_file, out_dir, n, hop, pad):
+            processed += 1
+            if processed % 25 == 0:
+                print(f"Processed {processed} weeks...")
+        else:
+            skipped += 1
+
+    print(f"s04 summary: processed={processed}, skipped={skipped}")
+
+
 def parse_args() -> argparse.Namespace:
     """Parse S04 CLI arguments."""
     p = argparse.ArgumentParser(description=__doc__)
@@ -67,34 +95,6 @@ def process_week(week_file: Path, out_dir: Path, n: int, hop: int, pad: int) -> 
     )
     meta.to_csv(out_dir / f"{week}_meta.csv", index=False)
     return True
-
-
-def main() -> None:
-    """Run S04: iterate weeks, compute STFT files, and print summary."""
-    args = parse_args()
-    n = args.window_size_seconds
-    hop = max(1, round(n * (1.0 - args.overlap_fraction)))
-    pad = n // 2
-
-    in_dir = Path(args.input_dir)
-    out_dir = Path(args.output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    weeks = sorted(in_dir.glob("*.csv"))
-    if args.limit_weeks > 0:
-        weeks = weeks[: args.limit_weeks]
-
-    processed = 0
-    skipped = 0
-    for week_file in weeks:
-        if process_week(week_file, out_dir, n, hop, pad):
-            processed += 1
-            if processed % 25 == 0:
-                print(f"Processed {processed} weeks...")
-        else:
-            skipped += 1
-
-    print(f"s04 summary: processed={processed}, skipped={skipped}")
 
 
 if __name__ == "__main__":

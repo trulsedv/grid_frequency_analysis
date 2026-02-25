@@ -9,17 +9,6 @@ import pandas as pd
 from utils import plot_period_spectrum_series
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse Sa5a CLI arguments."""
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
-    p.add_argument("--week-a", default="2024-W15")
-    p.add_argument("--week-b", default="2025-W15")
-    p.add_argument("--output-html", default="results/fft_amplitudes_two_weeks.html")
-    p.add_argument("--output-png", default="results/fft_amplitudes_two_weeks.png")
-    return p.parse_args()
-
-
 def main() -> None:
     """Render and save Sa5a comparison plot as HTML and PNG."""
     args = parse_args()
@@ -37,6 +26,17 @@ def main() -> None:
         output_html=args.output_html,
         output_png=args.output_png,
     )
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse Sa5a CLI arguments."""
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--input-dir", default="data/D05_weekly_stft_avg_amplitude")
+    p.add_argument("--week-a", default="2024-W15")
+    p.add_argument("--week-b", default="2025-W15")
+    p.add_argument("--output-html", default="results/fft_amplitudes_two_weeks.html")
+    p.add_argument("--output-png", default="results/fft_amplitudes_two_weeks.png")
+    return p.parse_args()
 
 
 if __name__ == "__main__":

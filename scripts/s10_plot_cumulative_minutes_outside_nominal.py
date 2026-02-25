@@ -10,6 +10,26 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
+def main() -> None:
+    """Run S10: load metrics, build figure, and save outputs."""
+    args = parse_args()
+    data = load_cumulative_inputs(args)
+    measured = data.year_frames[args.year]
+
+    fig = go.Figure()
+    add_historical_traces(fig, data.year_frames, args.year)
+    add_counterfactual_traces(fig, measured, data, args.year)
+
+    fig.update_layout(
+        title="Cumulative minutes outside nominal by year and 2025 counterfactual variants",
+        xaxis_title="ISO week",
+        yaxis_title="Cumulative minutes outside nominal",
+        template="plotly_white",
+    )
+
+    save_figure(fig, Path(args.output_html), Path(args.output_png))
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -43,16 +63,6 @@ def cumulative(df: pd.DataFrame) -> pd.DataFrame:
     out = df.sort_values("week").copy()
     out["cumulative_minutes"] = out["minutes_outside_nominal"].cumsum()
     return out
-
-
-@dataclass
-class S10Data:
-    """Prepared cumulative frames used by S10 plotting helpers."""
-
-    year_frames: dict[int, pd.DataFrame]
-    d14: pd.DataFrame
-    d15: pd.DataFrame
-    d16: pd.DataFrame
 
 
 def load_cumulative_inputs(args: argparse.Namespace) -> S10Data:
@@ -164,24 +174,14 @@ def save_figure(fig: go.Figure, output_html: Path, output_png: Path) -> None:
     print(f"Saved {output_png}")
 
 
-def main() -> None:
-    """Run S10: load metrics, build figure, and save outputs."""
-    args = parse_args()
-    data = load_cumulative_inputs(args)
-    measured = data.year_frames[args.year]
+@dataclass
+class S10Data:
+    """Prepared cumulative frames used by S10 plotting helpers."""
 
-    fig = go.Figure()
-    add_historical_traces(fig, data.year_frames, args.year)
-    add_counterfactual_traces(fig, measured, data, args.year)
-
-    fig.update_layout(
-        title="Cumulative minutes outside nominal by year and 2025 counterfactual variants",
-        xaxis_title="ISO week",
-        yaxis_title="Cumulative minutes outside nominal",
-        template="plotly_white",
-    )
-
-    save_figure(fig, Path(args.output_html), Path(args.output_png))
+    year_frames: dict[int, pd.DataFrame]
+    d14: pd.DataFrame
+    d15: pd.DataFrame
+    d16: pd.DataFrame
 
 
 if __name__ == "__main__":
