@@ -71,7 +71,7 @@ Period bins used in spectral attribution:
 - slow_over_2h_to_12h (7200–43200 s)
 
 ## Disclaimer
-This method is a structured "what-if" test. The results show which oscillation ranges are most strongly associated with the observed improvement, but it does not prove the real-world cause of the improved frequency.
+This method is a structured "what-if" test. The results show which oscillation ranges are most strongly associated with the observed improvement, but it does not prove what the real-world cause of the improved frequency is.
 
 ## Run
 Install dependencies:
