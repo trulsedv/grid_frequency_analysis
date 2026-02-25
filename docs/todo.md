@@ -1,0 +1,5 @@
+- [ ] remove argparse from all scripts, if openclaw needs it, make wrapper function with argparse in a seperate "cli_run.py" (or more standard naming).
+    - the user will mostly run the scripts as is with default parameters, so the argparse is making the code less readable than it could be
+- [ ] make all main functions "very humanly readable": short and function calls of the main operations in the script, this should make a reader clearly understand the script quickly.
+    - main must be the first definition in the script
+    - main must not be too short, so that the reader has to open other functions to understand the functionality of the script.
