@@ -12,12 +12,3 @@ wheels/
 # Data files
 data/
 
-# Generated STFT data (too large for git)
-results/weekly_stft/
-results/weekly_stft_avg/
-
-# Keep only compact presentation artifacts in results/
-results/reconstruction/*.csv
-results/reconstruction/*.html
-results/reconstruction_counterfactual/*_compare.csv
-results/reconstruction_counterfactual/*_compare.html
