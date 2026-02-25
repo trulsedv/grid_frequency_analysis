@@ -3,3 +3,5 @@
 - [ ] make all main functions "very humanly readable": short and function calls of the main operations in the script, this should make a reader clearly understand the script quickly.
     - main must be the first definition in the script
     - main must not be too short, so that the reader has to open other functions to understand the functionality of the script.
+- [ ] run ty checks (astral: uvx ty check) for all files and fix
+- [ ] handle ambigous dst changes for all years
