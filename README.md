@@ -1,7 +1,7 @@
 # Grid frequency analysis (2015–2025)
 
 ## Summary
-In 2025, the grid has noticeably fewer minutes outside the 49.9–50.1 Hz band than in earlier years, and this project investigates how much is caused by dampening of oscillations with certain periods. The method builds counterfactual 2025 signals by replacing selected spectral amplitudes with pre-cutoff baseline amplitudes, then computes minutes outside band and compares cumulative curves. The results indicate that most of the reduction is associated with damping in high-period (balancing) oscillations, with a meaningful additional contribution from low-period (frequency-control) oscillations; this is an attribution result under the model construction, not a standalone proof of real-world root cause.
+In 2025, the grid has noticeably fewer minutes outside the 49.9–50.1 Hz band than in earlier years, and this project investigates how much is linked to dampening of oscillations with certain periods. The method builds counterfactual 2025 signals by replacing selected spectral amplitudes with pre-cutoff baseline amplitudes, then computes minutes outside band and compares cumulative curves. The results indicate that most of the reduction is associated with damping in high-period (balancing) oscillations, with a meaningful additional contribution from low-period (frequency-control) oscillations.
 
 ## Method (pipeline scripts S01–S10)
 1. **S01 – Download frequency archives**
@@ -76,6 +76,9 @@ Period bins used in spectral attribution:
 - STFT window/overlap choices affect low-frequency attribution.
 - Quality filtering may remove difficult weeks and affect representativeness.
 - Results depend on cutoff week and period-bin definitions.
+
+## Disclaimer
+This method is a structured "what-if" test. It asks: if we change selected oscillation ranges in 2025 to look more like pre-cutoff years, how much does the out-of-band metric change? That helps estimate which ranges are important in the data and model used here. But it does not, by itself, prove the real-world root cause. To make a stronger causal claim, you would need extra evidence (for example operational records, market/control changes, and robustness checks across multiple alternative model choices).
 
 ## Run
 Install dependencies:
