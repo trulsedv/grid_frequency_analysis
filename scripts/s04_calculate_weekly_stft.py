@@ -21,8 +21,56 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def process_week(week_file: Path, out_dir: Path, n: int, hop: int, pad: int) -> bool:
+    """Process one weekly CSV into STFT+meta; return True if written."""
+    week = week_file.stem
+    out_csv = out_dir / f"{week}.csv"
+    if out_csv.exists():
+        return False
+
+    df = pd.read_csv(week_file)
+    if "Value" not in df.columns:
+        return False
+
+    x = df["Value"].to_numpy(dtype=float)
+    if len(x) < n:
+        return False
+
+    x_pad = np.pad(x, (pad, pad), mode="reflect")
+    starts = starts_for_len(len(x_pad), n, hop)
+    window = np.hanning(n)
+
+    spec_cols: list[np.ndarray] = []
+    for s in starts:
+        seg = x_pad[s : s + n] * window
+        spec_cols.append(np.fft.rfft(seg))
+
+    spec = np.stack(spec_cols, axis=1)
+    freqs = np.fft.rfftfreq(n, d=1.0)
+    with np.errstate(divide="ignore"):
+        periods = np.where(freqs > 0, 1.0 / freqs, np.inf)
+
+    out_df = pd.DataFrame({"period_s": periods})
+    for i in range(spec.shape[1]):
+        out_df[f"frame_{i:03d}"] = spec[:, i]
+    out_df.to_csv(out_csv, index=False)
+
+    meta = pd.DataFrame(
+        [{
+            "week": week,
+            "window_size_seconds": n,
+            "hop_seconds": hop,
+            "pad": pad,
+            "orig_len": len(x),
+            "frames": spec.shape[1],
+        }],
+    )
+    meta.to_csv(out_dir / f"{week}_meta.csv", index=False)
+    return True
+
+
 def main() -> None:
-    """Write one STFT CSV (+meta) per weekly input CSV."""
+    """Run S04: iterate weeks, compute STFT files, and print summary."""
     args = parse_args()
     n = args.window_size_seconds
     hop = max(1, round(n * (1.0 - args.overlap_fraction)))
@@ -39,56 +87,12 @@ def main() -> None:
     processed = 0
     skipped = 0
     for week_file in weeks:
-        week = week_file.stem
-        out_csv = out_dir / f"{week}.csv"
-        if out_csv.exists():
+        if process_week(week_file, out_dir, n, hop, pad):
+            processed += 1
+            if processed % 25 == 0:
+                print(f"Processed {processed} weeks...")
+        else:
             skipped += 1
-            continue
-
-        df = pd.read_csv(week_file)
-        if "Value" not in df.columns:
-            skipped += 1
-            continue
-
-        x = df["Value"].to_numpy(dtype=float)
-        if len(x) < n:
-            skipped += 1
-            continue
-
-        x_pad = np.pad(x, (pad, pad), mode="reflect")
-        starts = starts_for_len(len(x_pad), n, hop)
-        window = np.hanning(n)
-
-        spec_cols: list[np.ndarray] = []
-        for s in starts:
-            seg = x_pad[s : s + n] * window
-            spec_cols.append(np.fft.rfft(seg))
-
-        spec = np.stack(spec_cols, axis=1)
-        freqs = np.fft.rfftfreq(n, d=1.0)
-        with np.errstate(divide="ignore"):
-            periods = np.where(freqs > 0, 1.0 / freqs, np.inf)
-
-        out_df = pd.DataFrame({"period_s": periods})
-        for i in range(spec.shape[1]):
-            out_df[f"frame_{i:03d}"] = spec[:, i]
-        out_df.to_csv(out_csv, index=False)
-
-        meta = pd.DataFrame(
-            [{
-                "week": week,
-                "window_size_seconds": n,
-                "hop_seconds": hop,
-                "pad": pad,
-                "orig_len": len(x),
-                "frames": spec.shape[1],
-            }],
-        )
-        meta.to_csv(out_dir / f"{week}_meta.csv", index=False)
-
-        processed += 1
-        if processed % 25 == 0:
-            print(f"Processed {processed} weeks...")
 
     print(f"s04 summary: processed={processed}, skipped={skipped}")
 

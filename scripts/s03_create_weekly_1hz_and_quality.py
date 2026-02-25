@@ -28,6 +28,26 @@ class WeeklyQuality:
     status: str
 
 
+@dataclass
+class S03Context:
+    """Shared S03 paths/state used when flushing weekly outputs."""
+
+    weekly_data: dict[tuple[int, int], list[pd.DataFrame]]
+    output_dir: Path
+    report_path: Path
+    overwrite_existing_weeks: bool
+
+
+@dataclass
+class S03Counters:
+    """Progress counters printed in S03 summary."""
+
+    weeks_evaluated: int = 0
+    files_total: int = 0
+    files_skipped: int = 0
+    files_empty: int = 0
+
+
 def parse_args() -> argparse.Namespace:
     """Parse S03 CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -41,8 +61,56 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def parse_and_prepare_daily(csv_file: Path) -> pd.DataFrame | None:
+    """Read one daily 10 Hz CSV and return timezone-aware 1 Hz rows."""
+    try:
+        df = pd.read_csv(
+            csv_file,
+            usecols=["Time", "Value"],
+            dtype={"Time": "string", "Value": "float64"},
+        )
+    except pd.errors.EmptyDataError:
+        return None
+
+    if df.empty:
+        return None
+
+    df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce")
+    df = df.dropna(subset=["Time"])
+    df["Time"] = (
+        df["Time"]
+        .dt.tz_localize("Europe/Helsinki", ambiguous="infer", nonexistent="NaT")
+        .dt.tz_convert("Europe/Oslo")
+        .dt.floor("1s")
+    )
+    df = df.dropna(subset=["Time"])
+    df = df.groupby("Time", as_index=False, sort=False)["Value"].mean()
+
+    iso = df["Time"].dt.isocalendar()
+    df["ISO_Year"] = iso.year
+    df["ISO_Week"] = iso.week
+    return df
+
+
+def flush_previous_week(ctx: S03Context, prev_year: int | None, prev_week: int | None) -> int:
+    """Write previous week if available and append quality report row."""
+    if prev_week is None or prev_year is None:
+        return 0
+    quality = write_week_csv(
+        ctx.weekly_data,
+        prev_year,
+        prev_week,
+        ctx.output_dir,
+        overwrite_existing_weeks=ctx.overwrite_existing_weeks,
+    )
+    if quality is None:
+        return 0
+    write_quality_report([quality], ctx.report_path)
+    return 1
+
+
 def main() -> None:
-    """Read extracted daily CSVs and create weekly Oslo-time 1 Hz CSVs."""
+    """Run S03: iterate daily files, write weekly outputs, and update quality report."""
     args = parse_args()
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
@@ -52,99 +120,45 @@ def main() -> None:
 
     from_date = pd.Timestamp(args.from_date).date() if args.from_date else None
     to_date = pd.Timestamp(args.to_date).date() if args.to_date else None
-
-    weekly_data: dict[tuple[int, int], list[pd.DataFrame]] = {}
-    prev_week: int | None = None
-    prev_year: int | None = None
-
-    weeks_evaluated = 0
-    files_total = 0
-    files_skipped = 0
-    files_empty = 0
-
     csv_files = sorted(input_dir.glob("*.csv"))
     if args.limit_files > 0:
         csv_files = csv_files[: args.limit_files]
 
+    weekly_data: dict[tuple[int, int], list[pd.DataFrame]] = {}
+    ctx = S03Context(weekly_data, output_dir, report_path, args.overwrite_existing_weeks)
+    prev_year: int | None = None
+    prev_week: int | None = None
+    counters = S03Counters()
+
     for csv_file in csv_files:
         file_day = pd.Timestamp(csv_file.stem).date()
-        if from_date and file_day < from_date:
-            continue
-        if to_date and file_day > to_date:
+        if (from_date and file_day < from_date) or (to_date and file_day > to_date):
             continue
 
-        files_total += 1
+        counters.files_total += 1
         if (not args.overwrite_existing_weeks) and skip_csv_file(csv_file, output_dir):
-            files_skipped += 1
+            counters.files_skipped += 1
             continue
 
-        try:
-            df = pd.read_csv(
-                csv_file,
-                usecols=["Time", "Value"],
-                dtype={"Time": "string", "Value": "float64"},
-            )
-        except pd.errors.EmptyDataError:
-            files_empty += 1
+        df = parse_and_prepare_daily(csv_file)
+        if df is None:
+            counters.files_empty += 1
             continue
-
-        if df.empty:
-            files_empty += 1
-            continue
-
-        # Parse with explicit format for speed, then keep timestamps timezone-aware.
-        # Let timezone conversion + weekly reindex handle DST naturally.
-        df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce")
-        df = df.dropna(subset=["Time"])
-        df["Time"] = (
-            df["Time"]
-            .dt.tz_localize("Europe/Helsinki", ambiguous="infer", nonexistent="NaT")
-            .dt.tz_convert("Europe/Oslo")
-            .dt.floor("1s")
-        )
-        df = df.dropna(subset=["Time"])
-        df = df.groupby("Time", as_index=False, sort=False)["Value"].mean()
-
-        iso = df["Time"].dt.isocalendar()
-        df["ISO_Year"] = iso.year
-        df["ISO_Week"] = iso.week
 
         for (year, week), week_data in df.groupby(["ISO_Year", "ISO_Week"], sort=False):
-            if prev_week is not None and prev_week != week and prev_year is not None:
-                quality = write_week_csv(
-                    weekly_data,
-                    prev_year,
-                    prev_week,
-                    output_dir,
-                    overwrite_existing_weeks=args.overwrite_existing_weeks,
-                )
-                if quality is not None:
-                    write_quality_report([quality], report_path)
-                    weeks_evaluated += 1
-
+            if prev_week is not None and prev_week != week:
+                counters.weeks_evaluated += flush_previous_week(ctx, prev_year, prev_week)
             weekly_data.setdefault((int(year), int(week)), []).append(week_data)
-            prev_week = int(week)
-            prev_year = int(year)
+            prev_year, prev_week = int(year), int(week)
 
-    if prev_week is not None and prev_year is not None:
-        quality = write_week_csv(
-            weekly_data,
-            prev_year,
-            prev_week,
-            output_dir,
-            overwrite_existing_weeks=args.overwrite_existing_weeks,
-        )
-        if quality is not None:
-            write_quality_report([quality], report_path)
-            weeks_evaluated += 1
+    counters.weeks_evaluated += flush_previous_week(ctx, prev_year, prev_week)
 
-    if weeks_evaluated == 0 and report_path.exists():
+    if counters.weeks_evaluated == 0 and report_path.exists():
         print(f"Quality report unchanged: {report_path}")
-
     print(
         "s03 summary: "
-        f"files_total={files_total}, files_skipped={files_skipped}, files_empty={files_empty}, "
-        f"weeks_evaluated={weeks_evaluated}",
+        f"files_total={counters.files_total}, files_skipped={counters.files_skipped}, "
+        f"files_empty={counters.files_empty}, weeks_evaluated={counters.weeks_evaluated}",
     )
 
 

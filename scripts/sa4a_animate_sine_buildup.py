@@ -21,30 +21,33 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def main() -> None:
-    """Build and save the interactive FFT build-up animation HTML."""
-    args = parse_args()
+def load_segment(args: argparse.Namespace) -> np.ndarray:
+    """Load selected week segment from D03 weekly series."""
     week_path = Path("data/D03_weekly_1hz_csv") / f"{args.week}.csv"
-    y = pd.read_csv(week_path)["Value"].to_numpy(dtype=float)
-
-    n = args.duration_seconds
-    s = args.start_second
-    segment = y[s : s + n]
-    if len(segment) != n:
+    values = pd.read_csv(week_path)["Value"].to_numpy(dtype=float)
+    segment = values[args.start_second : args.start_second + args.duration_seconds]
+    if len(segment) != args.duration_seconds:
         msg = "Segment shorter than requested duration"
         raise ValueError(msg)
+    return segment
 
+
+def build_reconstruction_frames(
+    segment: np.ndarray,
+    component_step: int,
+) -> tuple[np.ndarray, list[tuple[str, np.ndarray]]]:
+    """Build measured/partial/full reconstruction frames."""
+    n = len(segment)
     t = np.arange(n)
     spectrum = np.fft.rfft(segment)
     freqs = np.fft.rfftfreq(n, d=1.0)
 
     partial = np.zeros(n, dtype=float)
     partial += spectrum[0].real / n
-
     frames = [("Measured", segment.copy()), ("DC only", partial.copy())]
 
     max_k = len(spectrum) - 1
-    step = max(1, args.component_step)
+    step = max(1, component_step)
     k_values = list(range(1, max_k + 1, step))
     if k_values[-1] != max_k:
         k_values.append(max_k)
@@ -66,16 +69,14 @@ def main() -> None:
         frames.append((f"DC + periods ≥ {period:.1f}s", accum.copy()))
 
     frames.append(("Full reconstruction (IFFT)", np.fft.irfft(spectrum, n=n)))
+    return t, frames
 
+
+def build_figure(t: np.ndarray, segment: np.ndarray, frames: list[tuple[str, np.ndarray]]) -> go.Figure:
+    """Build animation figure from prepared frames."""
     fig = go.Figure()
     fig.add_trace(
-        go.Scatter(
-            x=t,
-            y=segment,
-            mode="lines",
-            name="Measured",
-            line={"color": "black", "width": 2},
-        ),
+        go.Scatter(x=t, y=segment, mode="lines", name="Measured", line={"color": "black", "width": 2}),
     )
     fig.add_trace(
         go.Scatter(
@@ -87,23 +88,29 @@ def main() -> None:
         ),
     )
 
-    plotly_frames = []
-    for name, yhat in frames:
-        plotly_frames.append(
-            go.Frame(
-                name=name,
-                data=[go.Scatter(x=t, y=segment), go.Scatter(x=t, y=yhat)],
-                layout=go.Layout(title=f"FFT build-up: {name}"),
-            ),
+    fig.frames = [
+        go.Frame(
+            name=name,
+            data=[go.Scatter(x=t, y=segment), go.Scatter(x=t, y=yhat)],
+            layout=go.Layout(title=f"FFT build-up: {name}"),
         )
-
-    fig.frames = plotly_frames
+        for name, yhat in frames
+    ]
     fig.update_layout(
         title="FFT build-up",
         xaxis_title="Second in 1h segment",
         yaxis_title="Frequency (Hz)",
         template="plotly_white",
     )
+    return fig
+
+
+def main() -> None:
+    """Run Sa4a: load segment, build frames, and save animation HTML."""
+    args = parse_args()
+    segment = load_segment(args)
+    t, frames = build_reconstruction_frames(segment, args.component_step)
+    fig = build_figure(t, segment, frames)
 
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
