@@ -71,14 +71,14 @@ Period bins used in spectral attribution:
 - slow_over_2h_to_12h (7200–43200 s)
 
 ## Key assumptions and limitations
-- Attribution-style counterfactual, not causal identification.
-- Amplitude replacement keeps observed phase structure.
-- STFT window/overlap choices affect low-frequency attribution.
-- Quality filtering may remove difficult weeks and affect representativeness.
+- The result is from a "what-if" counterfactual construction, so it supports association/attribution, not final proof of cause.
+- In S07, amplitudes are modified but phase is kept from observed 2025 data.
+- STFT settings (window size and overlap) affect low-frequency resolution and attribution split.
+- S03 quality filtering can remove challenging weeks and change representativeness.
 - Results depend on cutoff week and period-bin definitions.
 
 ## Disclaimer
-This method is a structured "what-if" test. The results show which oscillation ranges are most strongly associated with the observed improvement, but it does not prove what the real-world cause of the improved frequnecy is.
+This method is a structured "what-if" test. The results show which oscillation ranges are most strongly associated with the observed improvement, but it does not prove the real-world cause of the improved frequency.
 
 ## Run
 Install dependencies:
