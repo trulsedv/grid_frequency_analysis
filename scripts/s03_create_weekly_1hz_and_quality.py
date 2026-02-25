@@ -57,7 +57,7 @@ def main() -> None:
     prev_week: int | None = None
     prev_year: int | None = None
 
-    report_rows: list[WeeklyQuality] = []
+    weeks_evaluated = 0
     files_total = 0
     files_skipped = 0
     files_empty = 0
@@ -113,7 +113,8 @@ def main() -> None:
                     overwrite_existing_weeks=args.overwrite_existing_weeks,
                 )
                 if quality is not None:
-                    report_rows.append(quality)
+                    write_quality_report([quality], report_path)
+                    weeks_evaluated += 1
 
             weekly_data.setdefault((int(year), int(week)), []).append(week_data)
             prev_week = int(week)
@@ -128,13 +129,16 @@ def main() -> None:
             overwrite_existing_weeks=args.overwrite_existing_weeks,
         )
         if quality is not None:
-            report_rows.append(quality)
+            write_quality_report([quality], report_path)
+            weeks_evaluated += 1
 
-    write_quality_report(report_rows, report_path)
+    if weeks_evaluated == 0 and report_path.exists():
+        print(f"Quality report unchanged: {report_path}")
+
     print(
         "s03 summary: "
         f"files_total={files_total}, files_skipped={files_skipped}, files_empty={files_empty}, "
-        f"weeks_evaluated={len(report_rows)}",
+        f"weeks_evaluated={weeks_evaluated}",
     )
 
 
