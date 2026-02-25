@@ -48,7 +48,7 @@ def starts_for_len(total_len: int, n: int, hop: int) -> list[int]:
     return starts
 
 
-def decode_stft_overlap_add(  # noqa: PLR0913, PLR0917
+def decode_stft_overlap_add(
     stft_frames_bins: np.ndarray,
     n: int,
     hop: int,

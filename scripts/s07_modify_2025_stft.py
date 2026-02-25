@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:  # noqa: C901, PLR0914, PLR0915
+def main() -> None:
     """Create three modified STFT datasets for the target year.
 
     The script scales STFT bins using baseline-vs-target amplitude ratios and

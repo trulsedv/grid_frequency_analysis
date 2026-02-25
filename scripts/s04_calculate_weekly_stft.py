@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def main() -> None:  # noqa: PLR0914
+def main() -> None:
     """Write one STFT CSV (+meta) per weekly input CSV."""
     args = parse_args()
     n = args.window_size_seconds

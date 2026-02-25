@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def main() -> None:  # noqa: PLR0914
+def main() -> None:
     """Build and save the interactive FFT build-up animation HTML."""
     args = parse_args()
     week_path = Path("data/D03_weekly_1hz_csv") / f"{args.week}.csv"

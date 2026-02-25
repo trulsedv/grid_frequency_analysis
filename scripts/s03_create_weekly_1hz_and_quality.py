@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:  # noqa: C901, PLR0914, PLR0915
+def main() -> None:
     """Read extracted daily CSVs and create weekly Oslo-time 1 Hz CSVs."""
     args = parse_args()
     input_dir = Path(args.input_dir)
