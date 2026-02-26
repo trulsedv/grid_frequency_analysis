@@ -114,16 +114,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def localize_helsinki(series: pd.Series) -> pd.Series:
-    """Localize naive timestamps to Helsinki, assuming DST for ambiguous times."""
-    return series.dt.tz_localize("Europe/Helsinki", ambiguous=True, nonexistent="NaT")
-
-
-def floor_oslo_seconds(series: pd.Series) -> pd.Series:
-    """Floor timezone-aware Oslo timestamps to 1-second resolution."""
-    return series.dt.floor("1s", ambiguous=True, nonexistent="NaT")
-
-
 def parse_and_prepare_daily(csv_file: Path) -> pd.DataFrame | None:
     """Read one daily 10 Hz CSV and return timezone-aware 1 Hz rows."""
     try:
@@ -140,7 +130,12 @@ def parse_and_prepare_daily(csv_file: Path) -> pd.DataFrame | None:
 
     df["Time"] = pd.to_datetime(df["Time"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce")
     df = df.dropna(subset=["Time"]).sort_values("Time")
-    df["Time"] = floor_oslo_seconds(localize_helsinki(df["Time"]).dt.tz_convert("Europe/Oslo"))
+    df["Time"] = (
+        df["Time"]
+        .dt.tz_localize("Europe/Helsinki", ambiguous=True, nonexistent="NaT")
+        .dt.tz_convert("Europe/Oslo")
+        .dt.floor("1s", ambiguous=True, nonexistent="NaT")
+    )
     df = df.dropna(subset=["Time"])
     df = df.groupby("Time", as_index=False, sort=False)["Value"].mean()
 
