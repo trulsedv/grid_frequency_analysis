@@ -115,20 +115,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def localize_helsinki(series: pd.Series) -> pd.Series:
-    """Localize naive timestamps to Helsinki with robust DST disambiguation."""
-    try:
-        return series.dt.tz_localize("Europe/Helsinki", ambiguous="infer", nonexistent="NaT")
-    except ValueError:
-        # Fallback for troublesome folds: prefer DST interpretation.
-        return series.dt.tz_localize("Europe/Helsinki", ambiguous=True, nonexistent="NaT")
+    """Localize naive timestamps to Helsinki, assuming DST for ambiguous times."""
+    return series.dt.tz_localize("Europe/Helsinki", ambiguous=True, nonexistent="NaT")
 
 
 def floor_oslo_seconds(series: pd.Series) -> pd.Series:
-    """Floor timezone-aware Oslo timestamps to 1s while handling DST folds."""
-    try:
-        return series.dt.floor("1s", ambiguous="infer", nonexistent="NaT")
-    except ValueError:
-        return series.dt.floor("1s", ambiguous=True, nonexistent="NaT")
+    """Floor timezone-aware Oslo timestamps to 1-second resolution."""
+    return series.dt.floor("1s", ambiguous=True, nonexistent="NaT")
 
 
 def parse_and_prepare_daily(csv_file: Path) -> pd.DataFrame | None:
