@@ -25,13 +25,14 @@ def main() -> None:
     modified = pd.read_csv(modified_dir / f"{week}.csv")["Value"].to_numpy(dtype=float)
 
     n = min(len(measured), len(reproduced), len(modified))
-    x = list(range(n))
-
+    start = max(0, args.start_second)
+    end = min(n, start + args.duration_seconds)
+    x = list(range(start, end))
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=x,
-            y=measured[:n],
+            y=measured[start:end],
             mode="lines",
             line={"color": "rgba(0,0,0,0.45)", "width": 1.2},
             name="Measured",
@@ -40,7 +41,7 @@ def main() -> None:
     fig.add_trace(
         go.Scatter(
             x=x,
-            y=reproduced[:n],
+            y=reproduced[start:end],
             mode="lines",
             line={"color": "rgba(0,100,255,0.45)", "width": 1.2},
             name="Reproduced from STFT",
@@ -49,7 +50,7 @@ def main() -> None:
     fig.add_trace(
         go.Scatter(
             x=x,
-            y=modified[:n],
+            y=modified[start:end],
             mode="lines",
             line={"color": "rgba(255,0,0,0.45)", "width": 1.2},
             name="Reproduced from modified STFT",
@@ -84,6 +85,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--measured-dir", default="data/D03_weekly_1hz_csv")
     parser.add_argument("--reproduced-dir", default="data/Da3_reproduced_weekly_1hz")
     parser.add_argument("--modified-dir", default="data/D11_modified_2025_weekly_1hz_low_high_periods")
+    parser.add_argument("--start-second", type=int, default=0)
+    parser.add_argument("--duration-seconds", type=int, default=3600)
     parser.add_argument("--output-html", default="results/week_signal_compare.html")
     parser.add_argument("--output-png", default="results/week_signal_compare.png")
     return parser.parse_args()
