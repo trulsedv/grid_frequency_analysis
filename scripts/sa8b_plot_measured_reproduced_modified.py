@@ -80,7 +80,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", default="2025-W22")
+    parser.add_argument("--week", default="2025-W23")
     parser.add_argument("--measured-dir", default="data/D03_weekly_1hz_csv")
     parser.add_argument("--reproduced-dir", default="data/Da3_reproduced_weekly_1hz")
     parser.add_argument("--modified-dir", default="data/D11_modified_2025_weekly_1hz_low_high_periods")

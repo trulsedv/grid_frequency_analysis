@@ -12,9 +12,7 @@ dependencies = [
     "requests",
     "plotly",
     "jax",
-    "py7zr>=1.1.0",
+    "py7zr",
+    "kaleido>=1.2.0",
 ]
 
-[[tool.uv.index]]
-url = "https://artifactory.statnett.no/artifactory/api/pypi/pypi_statnett_virtual/simple/"
-default = true

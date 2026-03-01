@@ -37,7 +37,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", default="2025-W22")
+    parser.add_argument("--week", default="2025-W23")
     parser.add_argument("--unmodified-dir", default="data/D05_weekly_stft_avg_amplitude")
     parser.add_argument("--modified-dir", default="data/Da2_modified_weekly_amplitudes")
     parser.add_argument(

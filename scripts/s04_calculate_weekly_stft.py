@@ -43,7 +43,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--input-dir", default="data/D03_weekly_1hz_csv")
     p.add_argument("--output-dir", default="data/D04_weekly_stft")
-    p.add_argument("--window-size-seconds", type=int, default=14400)
+    p.add_argument("--window-size-seconds", type=int, default=85860)
     p.add_argument("--overlap-fraction", type=float, default=0.5)
     p.add_argument("--limit-weeks", type=int, default=0)
     return p.parse_args()

@@ -40,7 +40,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--week", default="2025-W22")
+    parser.add_argument("--week", default="2025-W23")
     parser.add_argument("--stft-dir", default="data/D04_weekly_stft")
     parser.add_argument("--output-dir", default="data/Da3_reproduced_weekly_1hz")
     return parser.parse_args()
