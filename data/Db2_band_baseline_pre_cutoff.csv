@@ -1,0 +1,6 @@
+band,baseline_rms
+fast_sub_primary_5s_to_30s,0.0038474104685488454
+primary_local_control_30s_to_2m,0.017715540381247646
+midrange_2m_to_15m,0.013943671628876152
+balancing_15m_to_2h,0.02251508978837148
+slow_over_2h_to_12h,0.024931985694296464
