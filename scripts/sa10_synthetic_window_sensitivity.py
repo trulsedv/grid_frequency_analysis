@@ -147,11 +147,36 @@ def save_fixed_week_and_amplitude_plot(
     pd.DataFrame(amp_rows).to_csv(amp_csv, index=False)
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=p4[m4], y=a4[m4], mode="lines", name="4h", line={"dash": "solid"}))
-    fig.add_trace(go.Scatter(x=p24[m24], y=a24[m24], mode="lines", name="23h51m", line={"dash": "dash"}))
-    fig.add_trace(go.Scatter(x=p_fft[mfft], y=a_fft[mfft], mode="lines", name="whole_week_fft", line={"dash": "dot"}))
+    fig.add_trace(
+        go.Scatter(
+            x=p4[m4],
+            y=a4[m4],
+            mode="lines",
+            name="4h",
+            line={"dash": "solid", "color": "#1f77b4", "width": 2},
+        ),
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=p24[m24],
+            y=a24[m24],
+            mode="lines",
+            name="23h51m",
+            line={"dash": "dash", "color": "#ff7f0e", "width": 2},
+        ),
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=p_fft[mfft],
+            y=a_fft[mfft],
+            mode="lines+markers",
+            name="whole_week_fft",
+            line={"dash": "dot", "color": "#000000", "width": 3},
+            marker={"size": 4, "color": "#000000"},
+        ),
+    )
     fig.update_layout(
-        title="Synthetic week: average amplitude vs period (4h solid, 23h51m dashed)",
+        title="Synthetic week: average amplitude vs period (4h solid blue, 23h51m dashed orange, whole-week FFT dotted black)",
         xaxis_title="Period (s)",
         yaxis_title="Average amplitude",
         xaxis_type="log",
