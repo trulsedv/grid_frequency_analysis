@@ -136,8 +136,12 @@ def save_fixed_week_and_amplitude_plot(
     m24 = (p24 >= common_min) & (p24 <= common_max)
 
     amp_rows = []
+    p_fft, a_fft = whole_week_fft_amplitude(signal)
+    mfft = (p_fft >= common_min) & (p_fft <= common_max)
+
     amp_rows.extend(to_rows("synthetic_fixed", "4h", p4[m4], a4[m4]))
     amp_rows.extend(to_rows("synthetic_fixed", "23h51m", p24[m24], a24[m24]))
+    amp_rows.extend(to_rows("synthetic_fixed", "whole_week_fft", p_fft[mfft], a_fft[mfft]))
 
     amp_csv.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(amp_rows).to_csv(amp_csv, index=False)
@@ -145,6 +149,7 @@ def save_fixed_week_and_amplitude_plot(
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=p4[m4], y=a4[m4], mode="lines", name="4h", line={"dash": "solid"}))
     fig.add_trace(go.Scatter(x=p24[m24], y=a24[m24], mode="lines", name="23h51m", line={"dash": "dash"}))
+    fig.add_trace(go.Scatter(x=p_fft[mfft], y=a_fft[mfft], mode="lines", name="whole_week_fft", line={"dash": "dot"}))
     fig.update_layout(
         title="Synthetic week: average amplitude vs period (4h solid, 23h51m dashed)",
         xaxis_title="Period (s)",
@@ -157,6 +162,17 @@ def save_fixed_week_and_amplitude_plot(
     amp_html.parent.mkdir(parents=True, exist_ok=True)
     fig.write_html(amp_html, include_plotlyjs="cdn")
     fig.write_image(amp_png, width=1600, height=900, scale=2)
+
+
+def whole_week_fft_amplitude(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Compute amplitude spectrum from one full-week FFT."""
+    spec = np.fft.rfft(values)
+    amps = np.abs(spec)
+    freqs = np.fft.rfftfreq(len(values), d=1.0)
+    with np.errstate(divide="ignore"):
+        periods = np.where(freqs > 0, 1.0 / freqs, np.inf)
+    finite = np.isfinite(periods)
+    return periods[finite], amps[finite]
 
 
 def average_amplitude(
