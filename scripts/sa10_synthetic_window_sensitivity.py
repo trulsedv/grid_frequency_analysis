@@ -2,6 +2,7 @@
 
 Build a one-week synthetic signal from fixed-period sinusoids, vary phases across
 multiple draws, and compare average STFT amplitudes from 4h vs 23h51m windows.
+Also writes one fixed synthetic week CSV plus full amplitude-vs-period figure.
 """
 
 from __future__ import annotations
@@ -55,6 +56,18 @@ def main() -> None:
     write_draws_plot(draws, Path(args.output_draws_html), Path(args.output_draws_png))
     write_summary_plot(summary, Path(args.output_summary_html), Path(args.output_summary_png))
 
+    save_fixed_week_and_amplitude_plot(
+        periods,
+        args.fixed_phases,
+        args.short_window_seconds,
+        args.long_window_seconds,
+        args.overlap_fraction,
+        Path(args.output_fixed_week_csv),
+        Path(args.output_fixed_amp_csv),
+        Path(args.output_fixed_amp_html),
+        Path(args.output_fixed_amp_png),
+    )
+
     print(f"Saved {out_csv}")
     print(f"Saved {summary_csv}")
 
@@ -67,12 +80,17 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--short-window-seconds", type=int, default=14400)
     p.add_argument("--long-window-seconds", type=int, default=85860)
     p.add_argument("--overlap-fraction", type=float, default=0.5)
+    p.add_argument("--fixed-phases", default="0,0,0,0,0,0")
     p.add_argument("--output-csv", default="results/synthetic_window_phase_draws.csv")
     p.add_argument("--output-summary-csv", default="results/synthetic_window_phase_summary.csv")
     p.add_argument("--output-draws-html", default="results/synthetic_window_phase_draws.html")
     p.add_argument("--output-draws-png", default="results/synthetic_window_phase_draws.png")
     p.add_argument("--output-summary-html", default="results/synthetic_window_phase_summary.html")
     p.add_argument("--output-summary-png", default="results/synthetic_window_phase_summary.png")
+    p.add_argument("--output-fixed-week-csv", default="results/synthetic_week_signal.csv")
+    p.add_argument("--output-fixed-amp-csv", default="results/synthetic_week_window_compare_amplitudes.csv")
+    p.add_argument("--output-fixed-amp-html", default="results/synthetic_week_window_compare_amplitudes.html")
+    p.add_argument("--output-fixed-amp-png", default="results/synthetic_week_window_compare_amplitudes.png")
     return p.parse_args()
 
 
@@ -83,6 +101,59 @@ def synthesize_signal(periods: np.ndarray, phases: np.ndarray, length: int) -> n
     for period_s, phase in zip(periods, phases, strict=True):
         out += np.sin((2.0 * np.pi * t / period_s) + phase)
     return out
+
+
+def save_fixed_week_and_amplitude_plot(
+    periods: np.ndarray,
+    fixed_phases: str,
+    short_window_seconds: int,
+    long_window_seconds: int,
+    overlap_fraction: float,
+    week_csv: Path,
+    amp_csv: Path,
+    amp_html: Path,
+    amp_png: Path,
+) -> None:
+    """Save one fixed synthetic week CSV and its 4h vs 23h51m amplitude plot."""
+    phase_values = np.array([float(x.strip()) for x in fixed_phases.split(",")], dtype=float)
+    if len(phase_values) != len(periods):
+        raise ValueError("--fixed-phases must have 6 comma-separated values")
+
+    signal = synthesize_signal(periods, phase_values, SECONDS_PER_WEEK)
+
+    week_csv.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"Value": signal}).to_csv(week_csv, index=False)
+
+    p4, a4 = average_amplitude(signal, short_window_seconds, overlap_fraction)
+    p24, a24 = average_amplitude(signal, long_window_seconds, overlap_fraction)
+
+    common_min = max(p4.min(), p24.min())
+    common_max = min(p4.max(), p24.max())
+    m4 = (p4 >= common_min) & (p4 <= common_max)
+    m24 = (p24 >= common_min) & (p24 <= common_max)
+
+    amp_rows = []
+    amp_rows.extend(to_rows("synthetic_fixed", "4h", p4[m4], a4[m4]))
+    amp_rows.extend(to_rows("synthetic_fixed", "23h51m", p24[m24], a24[m24]))
+
+    amp_csv.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(amp_rows).to_csv(amp_csv, index=False)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=p4[m4], y=a4[m4], mode="lines", name="4h", line={"dash": "solid"}))
+    fig.add_trace(go.Scatter(x=p24[m24], y=a24[m24], mode="lines", name="23h51m", line={"dash": "dash"}))
+    fig.update_layout(
+        title="Synthetic week: average amplitude vs period (4h solid, 23h51m dashed)",
+        xaxis_title="Period (s)",
+        yaxis_title="Average amplitude",
+        xaxis_type="log",
+        yaxis_type="log",
+        template="plotly_white",
+    )
+
+    amp_html.parent.mkdir(parents=True, exist_ok=True)
+    fig.write_html(amp_html, include_plotlyjs="cdn")
+    fig.write_image(amp_png, width=1600, height=900, scale=2)
 
 
 def average_amplitude(values: np.ndarray, window_seconds: int, overlap_fraction: float) -> tuple[np.ndarray, np.ndarray]:
@@ -193,6 +264,14 @@ def write_summary_plot(summary: pd.DataFrame, out_html: Path, out_png: Path) -> 
     out_html.parent.mkdir(parents=True, exist_ok=True)
     fig.write_html(out_html, include_plotlyjs="cdn")
     fig.write_image(out_png, width=1400, height=900, scale=2)
+
+
+def to_rows(week: str, variant: str, periods: np.ndarray, values: np.ndarray) -> list[dict[str, float | str]]:
+    """Convert one period series into long-form rows for CSV output."""
+    return [
+        {"week": week, "variant": variant, "period_s": float(p), "value": float(v)}
+        for p, v in zip(periods, values, strict=True)
+    ]
 
 
 if __name__ == "__main__":
