@@ -30,8 +30,8 @@ def main() -> None:
         phases = rng.uniform(0.0, 2.0 * np.pi, size=len(periods))
         signal = synthesize_signal(periods, phases, SECONDS_PER_WEEK)
 
-        p4, a4 = average_amplitude(signal, args.short_window_seconds, args.overlap_fraction)
-        p24, a24 = average_amplitude(signal, args.long_window_seconds, args.overlap_fraction)
+        p4, a4 = average_amplitude(signal, args.short_window_seconds, args.overlap_fraction, args.window_type)
+        p24, a24 = average_amplitude(signal, args.long_window_seconds, args.overlap_fraction, args.window_type)
 
         eval_periods, ratio = ratio_at_target_periods(periods, p4, a4, p24, a24)
         draws.append((eval_periods, ratio, draw_id))
@@ -62,6 +62,7 @@ def main() -> None:
         args.short_window_seconds,
         args.long_window_seconds,
         args.overlap_fraction,
+        args.window_type,
         Path(args.output_fixed_week_csv),
         Path(args.output_fixed_amp_csv),
         Path(args.output_fixed_amp_html),
@@ -80,6 +81,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--short-window-seconds", type=int, default=14400)
     p.add_argument("--long-window-seconds", type=int, default=85860)
     p.add_argument("--overlap-fraction", type=float, default=0.5)
+    p.add_argument("--window-type", choices=["hann", "rect"], default="hann")
     p.add_argument("--fixed-phases", default="0,0,0,0,0,0")
     p.add_argument("--output-csv", default="results/synthetic_window_phase_draws.csv")
     p.add_argument("--output-summary-csv", default="results/synthetic_window_phase_summary.csv")
@@ -109,6 +111,7 @@ def save_fixed_week_and_amplitude_plot(
     short_window_seconds: int,
     long_window_seconds: int,
     overlap_fraction: float,
+    window_type: str,
     week_csv: Path,
     amp_csv: Path,
     amp_html: Path,
@@ -124,8 +127,8 @@ def save_fixed_week_and_amplitude_plot(
     week_csv.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame({"Value": signal}).to_csv(week_csv, index=False)
 
-    p4, a4 = average_amplitude(signal, short_window_seconds, overlap_fraction)
-    p24, a24 = average_amplitude(signal, long_window_seconds, overlap_fraction)
+    p4, a4 = average_amplitude(signal, short_window_seconds, overlap_fraction, window_type)
+    p24, a24 = average_amplitude(signal, long_window_seconds, overlap_fraction, window_type)
 
     common_min = max(p4.min(), p24.min())
     common_max = min(p4.max(), p24.max())
@@ -156,7 +159,12 @@ def save_fixed_week_and_amplitude_plot(
     fig.write_image(amp_png, width=1600, height=900, scale=2)
 
 
-def average_amplitude(values: np.ndarray, window_seconds: int, overlap_fraction: float) -> tuple[np.ndarray, np.ndarray]:
+def average_amplitude(
+    values: np.ndarray,
+    window_seconds: int,
+    overlap_fraction: float,
+    window_type: str,
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute period grid and average STFT amplitude for one signal."""
     n = window_seconds
     hop = max(1, round(n * (1.0 - overlap_fraction)))
@@ -164,7 +172,7 @@ def average_amplitude(values: np.ndarray, window_seconds: int, overlap_fraction:
 
     x_pad = np.pad(values, (pad, pad), mode="reflect")
     starts = starts_for_len(len(x_pad), n, hop)
-    window = np.hanning(n)
+    window = np.hanning(n) if window_type == "hann" else np.ones(n, dtype=float)
 
     spec_cols = []
     for s in starts:
